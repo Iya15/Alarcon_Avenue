@@ -2,6 +2,22 @@
 
 Production-grade multi-category e-commerce platform built with Laravel 12 + Inertia.js + React.
 
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Inertia.js](https://img.shields.io/badge/Inertia.js-2-9553E9?logo=inertia&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-06B6D4?logo=tailwindcss&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?logo=postgresql&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-12-0055FF?logo=framer&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-5-443E38?logo=react&logoColor=white)
+![Meilisearch](https://img.shields.io/badge/Meilisearch-1.16-FF5CAA?logo=meilisearch&logoColor=white)
+![Reverb](https://img.shields.io/badge/Laravel_Reverb-1.10-FF2D20?logo=laravel&logoColor=white)
+![Sanctum](https://img.shields.io/badge/Laravel_Sanctum-4.3-FF2D20?logo=laravel&logoColor=white)
+![Pest](https://img.shields.io/badge/Pest-3-1EAF4C?logo=pest&logoColor=white)
+![Spatie](https://img.shields.io/badge/Spatie_Permissions-6.25-2F2D2E?logo=laravel&logoColor=white)
+
 ## Requirements
 
 - PHP 8.2+
