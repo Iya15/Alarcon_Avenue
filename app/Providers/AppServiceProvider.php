@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\Category;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\User;
+use App\Policies\CategoryPolicy;
+use App\Policies\OrderPolicy;
+use App\Policies\ProductPolicy;
+use App\Policies\ReviewPolicy;
+use App\Policies\UserPolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void {}
+
+    public function boot(): void
+    {
+        Vite::prefetch(concurrency: 3);
+
+        Gate::policy(Category::class, CategoryPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Review::class, ReviewPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+    }
+}
