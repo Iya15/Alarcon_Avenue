@@ -36,7 +36,8 @@ class ProductController extends Controller
 
     public function show(string $slug): Response
     {
-        $product = Product::where('slug', $slug)
+        $product = Product::query()
+            ->where('slug', $slug)
             ->where('status', 'active')
             ->with([
                 'categories',
@@ -49,17 +50,47 @@ class ProductController extends Controller
             ])
             ->firstOrFail();
 
-        $related = Product::with(['primaryImage', 'variants.inventory'])
-            ->where('status', 'active')
-            ->where('id', '!=', $product->id)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $product->categories->pluck('id')))
-            ->inRandomOrder()
+        // Use precomputed recommendations; fall back to same-category if table is empty
+        $recIds = $product->recommendations()
+            ->with('recommended')
             ->limit(6)
-            ->get();
+            ->get()
+            ->pluck('recommended_product_id')
+            ->all();
+
+        if (! empty($recIds)) {
+            $related = Product::with(['primaryImage', 'variants.inventory'])
+                ->where('status', 'active')
+                ->whereIn('id', $recIds)
+                ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $recIds) . ']::int[], id)')
+                ->get();
+
+            $relatedReasons = $product->recommendations()
+                ->limit(6)
+                ->get()
+                ->pluck('reason', 'recommended_product_id')
+                ->all();
+        } else {
+            $related = Product::with(['primaryImage', 'variants.inventory'])
+                ->where('status', 'active')
+                ->where('id', '!=', $product->id)
+                ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $product->categories->pluck('id')))
+                ->inRandomOrder()
+                ->limit(6)
+                ->get();
+            $relatedReasons = [];
+        }
+
+        $relatedResolved = ProductCardResource::collection($related)->resolve();
+        // Attach reason label to each card so the frontend can display "Bought together" etc.
+        foreach ($relatedResolved as &$card) {
+            $card['recommendation_reason'] = $relatedReasons[$card['id']] ?? null;
+        }
+        unset($card);
 
         return Inertia::render('Products/Show', [
             'product'        => (new ProductDetailResource($product))->resolve(),
-            'relatedProducts' => ProductCardResource::collection($related)->resolve(),
+            'relatedProducts' => $relatedResolved,
         ]);
     }
 

@@ -84,6 +84,12 @@ class Product extends Model
         return $this->hasMany(Review::class)->where('status', Review::STATUS_PUBLISHED);
     }
 
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(\App\Models\ProductRecommendation::class)
+            ->orderByDesc('score');
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     public function isVendorProduct(): bool

@@ -1,11 +1,19 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
+use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\VariantController as AdminVariantController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VariantController as AdminVariantController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Admin\ReviewModerationController as AdminReviewModerationController;
 use App\Http\Controllers\Catalog\CategoryController;
@@ -31,14 +39,7 @@ Route::get('/_styleguide', fn () => Inertia::render('Styleguide'))->name('styleg
 
 // ── PUBLIC ────────────────────────────────────────────────────────────────────
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin'       => Route::has('login'),
-        'canRegister'    => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
-    ]);
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
@@ -157,7 +158,10 @@ Route::middleware(['auth', 'role:staff|admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/', fn () => Inertia::render('Admin/Dashboard'))->name('dashboard');
+        // Dashboard / analytics (reads pre-aggregated summary tables — eventual consistency lag up to 15 min)
+        Route::get('/', [AdminAnalyticsController::class, 'dashboard'])->name('dashboard');
+        Route::get('/analytics/export/sales',    [AdminAnalyticsController::class, 'exportSales'])->name('analytics.export.sales');
+        Route::get('/analytics/export/products', [AdminAnalyticsController::class, 'exportProducts'])->name('analytics.export.products');
 
         // Categories
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
@@ -205,15 +209,46 @@ Route::middleware(['auth', 'role:staff|admin'])
         // Review moderation queue
         Route::get('/reviews',                              [AdminReviewModerationController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{review}',                   [AdminReviewModerationController::class, 'update'])->name('reviews.update');
+
+        // Orders — list, detail, status transitions
+        Route::get('/orders',                               [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}',                       [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/status',              [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
+
+        // Inventory — low-stock dashboard
+        Route::get('/inventory',                            [AdminInventoryController::class, 'index'])->name('inventory.index');
+
+        // Coupons
+        Route::get('/coupons',                              [AdminCouponController::class, 'index'])->name('coupons.index');
+        Route::get('/coupons/create',                       [AdminCouponController::class, 'create'])->name('coupons.create');
+        Route::post('/coupons',                             [AdminCouponController::class, 'store'])->name('coupons.store');
+        Route::get('/coupons/{coupon}/edit',                [AdminCouponController::class, 'edit'])->name('coupons.edit');
+        Route::put('/coupons/{coupon}',                     [AdminCouponController::class, 'update'])->name('coupons.update');
+        Route::delete('/coupons/{coupon}',                  [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
+
+        // Audit logs (staff+admin can view, admin-only actions locked in policy)
+        Route::get('/audit-logs',                           [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
     });
 
 // ── ADMIN ONLY ────────────────────────────────────────────────────────────────
+
+// ── ADMIN ONLY (user mgmt, roles — hidden from staff) ─────────────────────────
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // User management — Milestone 6
+        // Users
+        Route::get('/users',                                [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}',                         [AdminUserController::class, 'show'])->name('users.show');
+        Route::patch('/users/{user}/roles',                 [AdminUserController::class, 'assignRole'])->name('users.assign-role');
+        Route::patch('/users/{user}/toggle-active',         [AdminUserController::class, 'toggleActive'])->name('users.toggle-active');
+
+        // Roles & permissions
+        Route::get('/roles',                                [AdminRoleController::class, 'index'])->name('roles.index');
+        Route::post('/roles',                               [AdminRoleController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{role}',                         [AdminRoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}',                      [AdminRoleController::class, 'destroy'])->name('roles.destroy');
     });
 
 require __DIR__.'/auth.php';
