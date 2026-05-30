@@ -11,8 +11,18 @@ class Payment extends Model
 {
     use HasFactory;
 
+    // type values
+    const TYPE_CHARGE = 'charge';
+    const TYPE_REFUND = 'refund';
+
+    // status values
+    const STATUS_PENDING   = 'pending';
+    const STATUS_CAPTURED  = 'captured';
+    const STATUS_FAILED    = 'failed';
+    const STATUS_REFUNDED  = 'refunded';
+
     protected $fillable = [
-        'order_id', 'gateway', 'gateway_transaction_id', 'gateway_payment_intent_id',
+        'order_id', 'type', 'gateway', 'gateway_transaction_id', 'gateway_payment_intent_id',
         'amount_cents', 'currency', 'status', 'method', 'last_four', 'metadata',
         'captured_at', 'failed_at', 'refunded_at',
     ];
@@ -21,10 +31,10 @@ class Payment extends Model
     {
         return [
             'amount_cents' => 'integer',
-            'metadata' => 'array',
-            'captured_at' => 'datetime',
-            'failed_at' => 'datetime',
-            'refunded_at' => 'datetime',
+            'metadata'     => 'array',
+            'captured_at'  => 'datetime',
+            'failed_at'    => 'datetime',
+            'refunded_at'  => 'datetime',
         ];
     }
 

@@ -138,11 +138,31 @@ return [
 
     'meilisearch' => [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
-        'key' => env('MEILISEARCH_KEY'),
+        'key'  => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            'products' => [
+                'searchableAttributes' => [
+                    'name', 'short_description', 'description',
+                    'brand_name', 'category_names', 'colors', 'sizes', 'materials',
+                ],
+                'filterableAttributes' => [
+                    'status', 'brand_id', 'category_ids',
+                    'colors', 'sizes', 'materials',
+                    'in_stock', 'has_discount', 'is_featured',
+                    'rating_average', 'discount_percent',
+                    'lowest_variant_price_cents', 'base_price_cents',
+                ],
+                'sortableAttributes' => [
+                    'base_price_cents', 'lowest_variant_price_cents',
+                    'rating_average', 'review_count', 'created_at',
+                ],
+                'typoTolerance' => [
+                    'enabled'            => true,
+                    'minWordSizeForTypos' => ['oneTypo' => 5, 'twoTypos' => 9],
+                ],
+                'pagination' => ['maxTotalHits' => 1000],
+                'faceting'   => ['maxValuesPerFacet' => 100],
+            ],
         ],
     ],
 

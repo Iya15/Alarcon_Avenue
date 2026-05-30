@@ -14,7 +14,8 @@ class ReviewPolicy
 
     public function view(?User $user, Review $review): bool
     {
-        return $review->is_approved || ($user && $user->id === $review->user_id)
+        return $review->status === Review::STATUS_PUBLISHED
+            || ($user && $user->id === $review->user_id)
             || ($user && $user->hasAnyRole(['admin', 'staff']));
     }
 

@@ -10,13 +10,14 @@ class CartItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['cart_id', 'product_variant_id', 'quantity', 'unit_price_cents'];
+    protected $fillable = ['cart_id', 'product_variant_id', 'quantity', 'unit_price_cents', 'saved_for_later'];
 
     protected function casts(): array
     {
         return [
-            'quantity' => 'integer',
+            'quantity'        => 'integer',
             'unit_price_cents' => 'integer',
+            'saved_for_later' => 'boolean',
         ];
     }
 

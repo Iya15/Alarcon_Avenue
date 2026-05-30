@@ -41,4 +41,16 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'stripe' => [
+        'key'             => env('STRIPE_KEY'),
+        'secret'          => env('STRIPE_SECRET'),
+        'webhook_secret'  => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'paymongo' => [
+        'public_key'      => env('PAYMONGO_PUBLIC_KEY'),
+        'secret_key'      => env('PAYMONGO_SECRET_KEY'),
+        'webhook_secret'  => env('PAYMONGO_WEBHOOK_SECRET'),
+    ],
+
 ];

@@ -22,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Webhook endpoints are server-to-server; they carry provider signatures instead of CSRF tokens.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/stripe',
+            'webhooks/paymongo',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

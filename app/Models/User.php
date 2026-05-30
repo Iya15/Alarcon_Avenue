@@ -76,6 +76,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Product::class, 'vendor_id');
     }
 
+    public function recentlyViewed(): HasMany
+    {
+        return $this->hasMany(RecentlyViewed::class)->orderByDesc('viewed_at');
+    }
+
     public function isSocialAuth(): bool
     {
         return $this->social_provider !== null;
