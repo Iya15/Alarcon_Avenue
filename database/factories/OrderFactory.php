@@ -33,7 +33,7 @@ class OrderFactory extends Factory
             'user_id' => User::factory(),
             'guest_email' => null,
             'order_number' => 'AA-' . strtoupper(fake()->unique()->bothify('######')),
-            'status' => fake()->randomElement(['pending', 'confirmed', 'processing', 'shipped', 'delivered']),
+            'status' => fake()->randomElement(['pending', 'awaiting_payment', 'paid', 'processing', 'shipped', 'delivered']),
             'shipping_address' => $address,
             'billing_address' => $address,
             'coupon_id' => null,
