@@ -140,9 +140,13 @@ class PlaceOrderAction
                 Coupon::where('id', $cart->coupon_id)->increment('used_count');
             }
 
-            // 4f. Clear active cart items; preserve saved-for-later
+            // 4f. Clear active cart items; preserve saved-for-later; mark recovered
             $cart->items()->where('saved_for_later', false)->delete();
-            $cart->update(['coupon_id' => null]);
+            $cart->update([
+                'coupon_id'    => null,
+                'status'       => 'recovered',
+                'recovered_at' => now(),
+            ]);
 
             return $order;
         });

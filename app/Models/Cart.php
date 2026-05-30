@@ -11,7 +11,15 @@ class Cart extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'session_id', 'coupon_id'];
+    protected $fillable = ['user_id', 'session_id', 'coupon_id', 'status', 'abandoned_at', 'recovered_at'];
+
+    protected function casts(): array
+    {
+        return [
+            'abandoned_at'  => 'datetime',
+            'recovered_at'  => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {
