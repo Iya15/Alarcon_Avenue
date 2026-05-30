@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VariantController as AdminVariantController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CompareController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Admin\ReviewModerationController as AdminReviewModerationController;
@@ -31,7 +32,6 @@ use App\Http\Controllers\Account\RecentlyViewedController as AccountRecentlyView
 use App\Http\Controllers\Account\ReviewController as AccountReviewController;
 use App\Http\Controllers\Account\WishlistController as AccountWishlistController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -45,6 +45,7 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+Route::get('/compare', [CompareController::class, 'index'])->name('compare.index');
 
 // ── Cart (Inertia page + JSON API — accessible to guests and auth users) ──────
 Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
@@ -120,6 +121,9 @@ Route::prefix('api')->name('api.')->group(function () {
     // Search JSON API
     Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
     Route::get('/search/trending',    [SearchController::class, 'trending'])->name('search.trending');
+
+    // Compare JSON API (prefetch product data)
+    Route::get('/compare', [CompareController::class, 'show'])->name('compare.show');
 });
 
 // ── AUTH REQUIRED ─────────────────────────────────────────────────────────────
