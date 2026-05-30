@@ -14,7 +14,7 @@ class AssignUserRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roles'   => ['required', 'array'],
+            'roles'   => ['present', 'array'],      // present but can be empty (strip all roles)
             'roles.*' => ['string', 'exists:roles,name'],
         ];
     }
