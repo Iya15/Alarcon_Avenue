@@ -1,4 +1,6 @@
 import { cn } from '@/lib/cn';
+import SearchInput from '@/Components/search/SearchInput';
+import { useCartStore } from '@/stores/cartStore';
 import { type PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -51,10 +53,16 @@ const shopMegaMenu: MegaMenuColumn[] = [
     },
 ];
 
-function CartIcon({ count = 0 }: { count?: number }) {
+function CartIcon() {
+    const { open, totals } = useCartStore();
+    const { cart_count: sharedCount } = usePage<PageProps>().props;
+
+    // Prefer live Zustand count; fall back to server-shared count on initial load
+    const count = totals.items_count > 0 ? totals.items_count : sharedCount;
+
     return (
-        <Link
-            href="/cart"
+        <button
+            onClick={open}
             className="relative rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             aria-label={`Cart${count > 0 ? `, ${count} items` : ''}`}
         >
@@ -62,11 +70,17 @@ function CartIcon({ count = 0 }: { count?: number }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
             </svg>
             {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
+                <motion.span
+                    key={count}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white"
+                >
                     {count > 9 ? '9+' : count}
-                </span>
+                </motion.span>
             )}
-        </Link>
+        </button>
     );
 }
 
@@ -75,6 +89,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [megaOpen, setMegaOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const megaTimer = useRef<ReturnType<typeof setTimeout>>();
 
     useEffect(() => {
@@ -177,14 +192,48 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
 
                         {/* Right actions */}
                         <div className="flex items-center gap-1">
-                            <button
-                                className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                            {/* Desktop: inline search bar expands */}
+                            <AnimatePresence mode="popLayout">
+                                {searchOpen ? (
+                                    <motion.div
+                                        key="search-bar"
+                                        className="hidden lg:block"
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{ width: 280, opacity: 1, transition: { duration: 0.2 } }}
+                                        exit={{ width: 0, opacity: 0, transition: { duration: 0.15 } }}
+                                    >
+                                        <SearchInput
+                                            autoFocus
+                                            placeholder="Search…"
+                                            onClose={() => setSearchOpen(false)}
+                                        />
+                                    </motion.div>
+                                ) : (
+                                    <motion.button
+                                        key="search-icon"
+                                        className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                        aria-label="Search"
+                                        onClick={() => setSearchOpen(true)}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                    >
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                        </svg>
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
+                            {/* Mobile: navigate to search page */}
+                            <Link
+                                href="/search"
+                                className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 lg:hidden"
                                 aria-label="Search"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                                 </svg>
-                            </button>
+                            </Link>
 
                             <CartIcon />
 

@@ -20,4 +20,5 @@ export type PageProps<
         success?: string;
         error?: string;
     };
+    cart_count: number;
 };

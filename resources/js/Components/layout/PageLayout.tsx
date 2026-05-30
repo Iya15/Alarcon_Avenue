@@ -1,5 +1,7 @@
+import CartDrawer from '@/Components/cart/CartDrawer';
 import { Toaster } from '@/Components/ui/Toast';
-import { type ReactNode } from 'react';
+import { useCartStore } from '@/stores/cartStore';
+import { type ReactNode, useEffect } from 'react';
 import type { BreadcrumbItem } from './Breadcrumbs';
 import Breadcrumbs from './Breadcrumbs';
 import Container from './Container';
@@ -20,6 +22,14 @@ export default function PageLayout({
     transparent = false,
     showFooter = true,
 }: PageLayoutProps) {
+    const { fetchCart, isInitialized } = useCartStore();
+
+    useEffect(() => {
+        if (!isInitialized) {
+            fetchCart();
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <Navbar transparent={transparent} />
@@ -37,6 +47,7 @@ export default function PageLayout({
             {showFooter && <Footer />}
 
             <MobileActionBar />
+            <CartDrawer />
             <Toaster />
         </div>
     );
