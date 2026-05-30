@@ -8,6 +8,7 @@ import ReviewSection from '@/Components/reviews/ReviewSection';
 import type { Review } from '@/Components/reviews/ReviewSection';
 import type { PageProps } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEchoPublic } from '@laravel/echo-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
@@ -195,11 +196,38 @@ function VariantSelector({
     );
 }
 
+interface StockPayload {
+    product_id: number;
+    variant_id: number;
+    available: number;
+    in_stock: boolean;
+    is_low_stock: boolean;
+}
+
 export default function ProductShow({ product, relatedProducts }: Props) {
     const { auth } = usePage<PageProps>().props;
     const activeVariants = product.variants.filter((v) => v.is_active);
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(activeVariants[0] ?? null);
     const [quantity, setQuantity] = useState(1);
+
+    // Live stock overrides keyed by variant_id — updated via Reverb broadcast
+    const [liveStock, setLiveStock] = useState<Record<number, Pick<Inventory, 'available' | 'in_stock' | 'is_low_stock'>>>({});
+
+    useEchoPublic<StockPayload>(
+        `products.${product.id}`,
+        '.stock.updated',
+        (payload) => {
+            setLiveStock((prev) => ({
+                ...prev,
+                [payload.variant_id]: {
+                    available: payload.available,
+                    in_stock: payload.in_stock,
+                    is_low_stock: payload.is_low_stock,
+                },
+            }));
+        },
+        [product.id]
+    );
 
     // Track recently viewed — authenticated users: POST to server; guests: localStorage
     useEffect(() => {
@@ -217,7 +245,11 @@ export default function ProductShow({ product, relatedProducts }: Props) {
 
     const price = selectedVariant?.effective_price ?? product.base_price_cents;
     const comparePrice = selectedVariant?.compare_at_price_cents ?? product.compare_at_price_cents;
-    const inventory = selectedVariant?.inventory;
+    // Merge live Reverb override (if any) with the server-rendered inventory
+    const baseInventory = selectedVariant?.inventory;
+    const inventory = selectedVariant
+        ? { ...baseInventory, ...(liveStock[selectedVariant.id] ?? {}) } as Inventory | null
+        : baseInventory;
     const inStock = inventory ? inventory.in_stock : false;
     const isLowStock = inventory?.is_low_stock ?? false;
     const maxQty = Math.min(inventory?.available ?? 1, 10);

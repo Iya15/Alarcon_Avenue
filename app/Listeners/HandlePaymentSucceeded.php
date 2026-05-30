@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Enums\OrderStatus;
 use App\Events\OrderPaid;
 use App\Events\PaymentSucceeded;
+use App\Events\StockUpdated;
 use App\Models\Inventory;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,15 @@ class HandlePaymentSucceeded
                     ->decrement('quantity', $item->quantity);
                 Inventory::where('product_variant_id', $item->product_variant_id)
                     ->decrement('reserved_quantity', $item->quantity);
+            }
+
+            // 4. Broadcast updated stock levels for each affected variant
+            $variantIds = $order->items->pluck('product_variant_id')->unique();
+            foreach ($variantIds as $variantId) {
+                $inv = Inventory::where('product_variant_id', $variantId)->first();
+                if ($inv) {
+                    event(new StockUpdated($inv->load('variant')));
+                }
             }
         });
 

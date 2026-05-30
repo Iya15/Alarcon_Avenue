@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin\Inventory;
 
+use App\Events\StockUpdated;
 use App\Models\Inventory;
 use App\Models\ProductVariant;
 
@@ -17,6 +18,11 @@ class UpdateInventoryAction
             'low_stock_threshold' => $data['low_stock_threshold'] ?? $inventory->low_stock_threshold,
         ]);
 
-        return $inventory->fresh();
+        $fresh = $inventory->fresh()->load('variant');
+
+        // Broadcast updated stock so open product pages refresh live
+        event(new StockUpdated($fresh));
+
+        return $fresh;
     }
 }
