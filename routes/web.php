@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VariantController as AdminVariantController;
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CompareController;
 use App\Http\Controllers\HomeController;
@@ -124,6 +125,11 @@ Route::prefix('api')->name('api.')->group(function () {
 
     // Compare JSON API (prefetch product data)
     Route::get('/compare', [CompareController::class, 'show'])->name('compare.show');
+
+    // AI shopping assistant — rate-limited to 12 requests/minute per user/IP
+    Route::post('/assistant', AssistantController::class)
+        ->name('assistant')
+        ->middleware('throttle:12,1');
 });
 
 // ── AUTH REQUIRED ─────────────────────────────────────────────────────────────

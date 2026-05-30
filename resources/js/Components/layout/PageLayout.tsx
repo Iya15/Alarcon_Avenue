@@ -1,4 +1,5 @@
 import CartDrawer from '@/Components/cart/CartDrawer';
+import ChatWidget from '@/Components/assistant/ChatWidget';
 import { Toaster } from '@/Components/ui/Toast';
 import { useCartStore } from '@/stores/cartStore';
 import { type ReactNode, useEffect } from 'react';
@@ -48,6 +49,7 @@ export default function PageLayout({
 
             <MobileActionBar />
             <CartDrawer />
+            <ChatWidget />
             <Toaster />
         </div>
     );

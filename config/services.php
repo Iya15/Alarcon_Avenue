@@ -53,4 +53,8 @@ return [
         'webhook_secret'  => env('PAYMONGO_WEBHOOK_SECRET'),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+    ],
+
 ];
