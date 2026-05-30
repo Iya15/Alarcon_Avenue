@@ -2,7 +2,7 @@ import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Card from '@/Components/ui/Card';
 import Input from '@/Components/ui/Input';
-import Container from '@/Components/layout/Container';
+import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -43,11 +43,10 @@ export default function AdminProductsIndex({ products, filters }: Props) {
     const restore = (id: number) => router.post(route('admin.products.restore', id));
 
     return (
-        <>
+        <AdminLayout title="Products">
             <Head title="Products — Admin" />
-            <Container className="py-8">
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight text-ink-950">Products ({products.meta.total})</h1>
+                    <h1 className="text-lg font-bold text-white">Products ({products.meta.total})</h1>
                     <Button href={route('admin.products.create')}>Add product</Button>
                 </div>
 
@@ -125,7 +124,6 @@ export default function AdminProductsIndex({ products, filters }: Props) {
                         ))}
                     </div>
                 )}
-            </Container>
-        </>
+        </AdminLayout>
     );
 }

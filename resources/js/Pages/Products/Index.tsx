@@ -5,10 +5,11 @@ import EmptyState from '@/Components/ui/EmptyState';
 import Skeleton from '@/Components/ui/Skeleton';
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
+import SeoHead from '@/Components/layout/SeoHead';
 import type { PageProps } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ProductImage { url: string; alt_text: string | null }
 interface ProductCard {
@@ -110,11 +111,55 @@ const sortOptions = [
 ];
 
 export default function ProductsIndex({ products, categories, category, filters, title }: Props) {
-    const [sort, setSort] = useState(filters.sort ?? 'newest');
+    const [sort, setSort]           = useState(filters.sort ?? 'newest');
+    // Accumulate product cards across infinite-scroll pages; reset when sort/filter changes
+    const [allProducts, setAllProducts] = useState<ProductCard[]>(products.data);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    // Reset accumulated list when the products prop changes (new filter/sort visit)
+    useEffect(() => {
+        setAllProducts(products.data);
+    }, [products.meta.current_page === 1 ? products.data : null]); // eslint-disable-line
+
+    // Intersection observer: load next page when sentinel enters viewport
+    useEffect(() => {
+        if (!sentinelRef.current || products.meta.current_page >= products.meta.last_page) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting || loadingMore) return;
+                const nextPage = products.meta.current_page + 1;
+                setLoadingMore(true);
+                router.get(
+                    window.location.pathname,
+                    { ...Object.fromEntries(new URLSearchParams(window.location.search)), page: nextPage },
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                        only: ['products'],
+                        onSuccess: (page) => {
+                            const next = (page.props as { products: typeof products }).products;
+                            setAllProducts((prev) => {
+                                const existingIds = new Set(prev.map((p) => p.id));
+                                return [...prev, ...next.data.filter((p) => !existingIds.has(p.id))];
+                            });
+                            setLoadingMore(false);
+                        },
+                        onError: () => setLoadingMore(false),
+                    }
+                );
+            },
+            { rootMargin: '200px' }
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [products.meta.current_page, products.meta.last_page, loadingMore]); // eslint-disable-line
 
     const handleSort = (value: string) => {
         setSort(value);
-        router.get(window.location.pathname, { sort: value }, { preserveScroll: true, preserveState: true });
+        setAllProducts([]);
+        router.get(window.location.pathname, { sort: value }, { preserveScroll: false, preserveState: false });
     };
 
     const breadcrumbs = category
@@ -127,7 +172,11 @@ export default function ProductsIndex({ products, categories, category, filters,
 
     return (
         <PageLayout breadcrumbs={breadcrumbs}>
-            <Head title={title} />
+            <SeoHead
+                title={title}
+                description={category?.description ?? `Browse ${title} at Alarcon Avenue — quality products, great prices.`}
+                image={category?.image_url ?? undefined}
+            />
 
             <Container className="py-8 lg:py-12">
                 {category && (
@@ -165,43 +214,50 @@ export default function ProductsIndex({ products, categories, category, filters,
                     </div>
                 </div>
 
-                {products.data.length === 0 ? (
+                {allProducts.length === 0 ? (
                     <EmptyState
                         title="No products found"
                         description="Try a different category or check back later."
                     />
                 ) : (
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-                        {products.data.map((product) => (
+                        {allProducts.map((product) => (
                             <ProductCardItem key={product.id} product={product} />
                         ))}
                     </div>
                 )}
 
-                {products.meta.last_page > 1 && (
-                    <div className="mt-10 flex items-center justify-center gap-1">
-                        {products.links.map((link, i) => (
-                            link.url ? (
-                                <Link
-                                    key={i}
-                                    href={link.url}
-                                    preserveScroll
-                                    className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-3 text-sm transition-colors
-                                        ${link.active
-                                            ? 'bg-brand-500 text-white font-medium'
-                                            : 'border border-ink-200 text-ink-700 hover:bg-ink-50'
-                                        }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ) : (
-                                <span
-                                    key={i}
-                                    className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-ink-200 px-3 text-sm text-ink-300 cursor-default"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            )
-                        ))}
+                {/* Infinite-scroll sentinel — IntersectionObserver watches this */}
+                <div ref={sentinelRef} className="h-1" aria-hidden />
+
+                {loadingMore && (
+                    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                        {[...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)}
                     </div>
+                )}
+
+                {/* Accessible pagination fallback for no-JS / SEO */}
+                {products.meta.last_page > 1 && (
+                    <noscript>
+                        <div className="mt-10 flex items-center justify-center gap-1">
+                            {products.links.map((link, i) => (
+                                link.url ? (
+                                    <a
+                                        key={i}
+                                        href={link.url}
+                                        className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-3 text-sm transition-colors
+                                            ${link.active ? 'bg-brand text-white font-medium' : 'border border-ink-200 text-ink-700 hover:bg-ink-50'}`}
+                                    >
+                                        {link.label.replace(/&laquo;|&raquo;/g, (m) => m === '&laquo;' ? '«' : '»')}
+                                    </a>
+                                ) : (
+                                    <span key={i} className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-ink-200 px-3 text-sm text-ink-300 cursor-default">
+                                        {link.label.replace(/&laquo;|&raquo;/g, (m) => m === '&laquo;' ? '«' : '»')}
+                                    </span>
+                                )
+                            ))}
+                        </div>
+                    </noscript>
                 )}
             </Container>
         </PageLayout>

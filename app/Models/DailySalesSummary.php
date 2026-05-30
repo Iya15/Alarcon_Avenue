@@ -18,7 +18,6 @@ class DailySalesSummary extends Model
     protected function casts(): array
     {
         return [
-            'date'          => 'date',
             'orders_count'  => 'integer',
             'gross_cents'   => 'integer',
             'net_cents'     => 'integer',

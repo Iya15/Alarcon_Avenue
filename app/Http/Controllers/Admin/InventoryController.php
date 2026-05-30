@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Inventory;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,7 +33,7 @@ class InventoryController extends Controller
                 'quantity'       => $v->inventory?->quantity ?? 0,
                 'reserved'       => $v->inventory?->reserved_quantity ?? 0,
                 'available'      => $v->inventory?->available ?? 0,
-                'is_low_stock'   => $v->inventory?->is_low_stock ?? false,
+                'is_low_stock'   => $v->inventory?->isLowStock() ?? false,
                 'threshold'      => $v->inventory?->low_stock_threshold ?? 5,
             ]);
 

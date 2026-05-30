@@ -7,6 +7,7 @@ use App\Http\Resources\ProductCardResource;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,12 +18,14 @@ class HomeController extends Controller
         $user = $request->user();
         $data = $action->execute($user);
 
-        $heroCategories = Category::with('children')
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->limit(6)
-            ->get();
+        $heroCategories = Cache::remember('categories.hero', 3600, fn () =>
+            Category::with('children')
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->limit(6)
+                ->get()
+        );
 
         return Inertia::render('Home', [
             'featured'      => ProductCardResource::collection($data['featured'])->resolve(),

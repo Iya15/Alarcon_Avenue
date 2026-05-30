@@ -17,7 +17,6 @@ class DailyProductStats extends Model
     protected function casts(): array
     {
         return [
-            'date'          => 'date',
             'product_id'    => 'integer',
             'units_sold'    => 'integer',
             'revenue_cents' => 'integer',

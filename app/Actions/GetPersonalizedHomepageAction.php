@@ -10,6 +10,7 @@ use App\Models\RecentlyViewed;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -38,7 +39,12 @@ class GetPersonalizedHomepageAction
         $topCategories = [];
 
         if ($user) {
-            [$topCategories, $personalized] = $this->personalizedForUser($user);
+            // Per-user personalization cached for 30 minutes; busted on new order/view
+            [$topCategories, $personalized] = Cache::remember(
+                "homepage.personalized.user.{$user->id}",
+                1800,
+                fn () => $this->personalizedForUser($user)
+            );
         }
 
         return [
@@ -53,12 +59,14 @@ class GetPersonalizedHomepageAction
 
     private function featuredProducts(): Collection
     {
-        return Product::with(['primaryImage', 'variants.inventory'])
-            ->where('status', 'active')
-            ->where('is_featured', true)
-            ->orderByDesc('updated_at')
-            ->limit(self::FEATURED_LIMIT)
-            ->get();
+        return Cache::remember('homepage.featured', 3600, fn () =>
+            Product::with(['primaryImage', 'variants.inventory'])
+                ->where('status', 'active')
+                ->where('is_featured', true)
+                ->orderByDesc('updated_at')
+                ->limit(self::FEATURED_LIMIT)
+                ->get()
+        );
     }
 
     /**
@@ -67,33 +75,34 @@ class GetPersonalizedHomepageAction
      */
     private function bestSellers(): Collection
     {
-        $cutoff = Carbon::now()->subDays(30)->toDateString();
+        // Cache bestsellers for 1 hour — stale-while-revalidate is fine for this rail
+        return Cache::remember('homepage.bestsellers', 3600, function () {
+            $cutoff = Carbon::now()->subDays(30)->toDateString();
 
-        $topIds = DailyProductStats::select('product_id', DB::raw('SUM(units_sold) as total_sold'))
-            ->where('date', '>=', $cutoff)
-            ->groupBy('product_id')
-            ->orderByDesc('total_sold')
-            ->limit(self::BESTSELLER_LIMIT * 2) // over-fetch to account for inactive products
-            ->pluck('product_id')
-            ->all();
+            $topIds = DailyProductStats::select('product_id', DB::raw('SUM(units_sold) as total_sold'))
+                ->where('date', '>=', $cutoff)
+                ->groupBy('product_id')
+                ->orderByDesc('total_sold')
+                ->limit(self::BESTSELLER_LIMIT * 2)
+                ->pluck('product_id')
+                ->all();
 
-        if (empty($topIds)) {
-            // Fallback: highest rated active products
+            if (empty($topIds)) {
+                return Product::with(['primaryImage', 'variants.inventory'])
+                    ->where('status', 'active')
+                    ->orderByDesc('rating_average')
+                    ->orderByDesc('review_count')
+                    ->limit(self::BESTSELLER_LIMIT)
+                    ->get();
+            }
+
             return Product::with(['primaryImage', 'variants.inventory'])
                 ->where('status', 'active')
-                ->orderByDesc('rating_average')
-                ->orderByDesc('review_count')
+                ->whereIn('id', $topIds)
+                ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $topIds) . ']::int[], id)')
                 ->limit(self::BESTSELLER_LIMIT)
                 ->get();
-        }
-
-        // Preserve ranking order from the stats query
-        return Product::with(['primaryImage', 'variants.inventory'])
-            ->where('status', 'active')
-            ->whereIn('id', $topIds)
-            ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $topIds) . ']::int[], id)')
-            ->limit(self::BESTSELLER_LIMIT)
-            ->get();
+        });
     }
 
     /**

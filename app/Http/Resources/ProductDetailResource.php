@@ -13,7 +13,11 @@ class ProductDetailResource extends JsonResource
             'id'                     => $this->id,
             'name'                   => $this->name,
             'slug'                   => $this->slug,
-            'description'            => $this->description,
+            // Strip anything outside a safe formatting allowlist before sending to the frontend.
+            // dangerouslySetInnerHTML in Show.tsx renders this, so dangerous tags must be removed here.
+            'description'            => $this->description
+                ? strip_tags($this->description, '<p><br><strong><em><b><i><ul><ol><li><h2><h3><h4><blockquote><hr>')
+                : null,
             'short_description'      => $this->short_description,
             'base_price_cents'       => $this->base_price_cents,
             'compare_at_price_cents' => $this->compare_at_price_cents,

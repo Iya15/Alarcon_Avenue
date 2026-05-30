@@ -16,7 +16,6 @@ class DailyTrafficSummary extends Model
     protected function casts(): array
     {
         return [
-            'date'          => 'date',
             'sessions'      => 'integer',
             'product_views' => 'integer',
         ];

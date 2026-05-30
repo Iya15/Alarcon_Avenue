@@ -14,8 +14,10 @@ class OrderController extends Controller
 {
     public function index(Request $request): Response
     {
+        // Eager-load relations used by OrderResource to avoid N+1 on the list page
         $orders = $request->user()
             ->orders()
+            ->with(['items', 'coupon'])
             ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString();

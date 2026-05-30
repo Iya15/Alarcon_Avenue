@@ -21,4 +21,15 @@ class SubmitReviewRequest extends FormRequest
             'photos.*'  => ['file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        // Strip all HTML from user-submitted text fields — reviews are plain text only
+        if ($this->has('title')) {
+            $this->merge(['title' => strip_tags($this->input('title', ''))]);
+        }
+        if ($this->has('body')) {
+            $this->merge(['body' => strip_tags($this->input('body', ''))]);
+        }
+    }
 }

@@ -1,7 +1,8 @@
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
+import SeoHead from '@/Components/layout/SeoHead';
 import type { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
 interface ProductImage { url: string; alt_text: string | null }
@@ -36,6 +37,7 @@ function ProductCard({ product }: { product: ProductCard }) {
                                 src={product.primary_image.url}
                                 alt={product.primary_image.alt_text ?? product.name}
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                loading="lazy"
                             />
                         ) : (
                             <div className="h-full w-full flex items-center justify-center text-ink-300">
@@ -88,7 +90,10 @@ export default function Home({ auth, featured, bestsellers, personalized, topCat
 
     return (
         <PageLayout>
-            <Head title="Alarcon Avenue" />
+            <SeoHead
+                title="Shop Online"
+                description="Alarcon Avenue — curated multi-category e-commerce. Browse fashion, electronics, home & more with free shipping on qualifying orders."
+            />
 
             {/* Hero */}
             <section className="bg-ink-900 py-16 lg:py-24">

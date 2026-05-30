@@ -4,7 +4,7 @@ import Card from '@/Components/ui/Card';
 import Modal from '@/Components/ui/Modal';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
-import Container from '@/Components/layout/Container';
+import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -25,11 +25,10 @@ export default function AdminAttributesIndex({ attributes }: Props) {
     };
 
     return (
-        <>
+        <AdminLayout title="Attributes">
             <Head title="Attributes — Admin" />
-            <Container className="py-8">
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight text-ink-950">Attributes</h1>
+                    <h1 className="text-lg font-bold text-white">Attributes</h1>
                     <Button onClick={() => setNewAttrOpen(true)}>Add attribute</Button>
                 </div>
 
@@ -66,7 +65,6 @@ export default function AdminAttributesIndex({ attributes }: Props) {
                         </Card>
                     ))}
                 </div>
-            </Container>
 
             <Modal open={newAttrOpen} onClose={() => setNewAttrOpen(false)} title="New attribute"
                 footer={<><Button variant="secondary" onClick={() => setNewAttrOpen(false)}>Cancel</Button><Button type="submit" form="new-attr-form" loading={processing}>Create</Button></>}
@@ -81,7 +79,7 @@ export default function AdminAttributesIndex({ attributes }: Props) {
                     ]} />
                 </form>
             </Modal>
-        </>
+        </AdminLayout>
     );
 }
 

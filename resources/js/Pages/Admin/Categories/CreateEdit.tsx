@@ -3,7 +3,7 @@ import Card from '@/Components/ui/Card';
 import Checkbox from '@/Components/ui/Checkbox';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
-import Container from '@/Components/layout/Container';
+import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -36,10 +36,9 @@ export default function AdminCategoryForm({ category, parents }: Props) {
     };
 
     return (
-        <>
-            <Head title={isEditing ? `Edit ${category!.name}` : 'New Category'} />
-            <Container size="md" className="py-8">
-                <h1 className="mb-6 text-2xl font-bold tracking-tight text-ink-950">
+        <AdminLayout title={isEditing ? `Edit ${category!.name}` : 'New Category'}>
+            <Head title={isEditing ? `Edit ${category!.name}` : 'New Category — Admin'} />
+                <h1 className="mb-6 text-lg font-bold text-white">
                     {isEditing ? `Edit "${category!.name}"` : 'New Category'}
                 </h1>
 
@@ -102,7 +101,6 @@ export default function AdminCategoryForm({ category, parents }: Props) {
                         </div>
                     </Card>
                 </form>
-            </Container>
-        </>
+        </AdminLayout>
     );
 }

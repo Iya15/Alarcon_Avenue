@@ -1,7 +1,7 @@
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Card from '@/Components/ui/Card';
-import Container from '@/Components/layout/Container';
+import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 
@@ -24,11 +24,10 @@ export default function AdminCategoriesIndex({ categories }: Props) {
     };
 
     return (
-        <>
+        <AdminLayout title="Categories">
             <Head title="Categories — Admin" />
-            <Container className="py-8">
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight text-ink-950">Categories</h1>
+                    <h1 className="text-lg font-bold text-white">Categories</h1>
                     <Button href={route('admin.categories.create')}>Add category</Button>
                 </div>
 
@@ -63,7 +62,6 @@ export default function AdminCategoriesIndex({ categories }: Props) {
                         </tbody>
                     </table>
                 </Card>
-            </Container>
-        </>
+        </AdminLayout>
     );
 }

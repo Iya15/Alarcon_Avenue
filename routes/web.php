@@ -42,18 +42,28 @@ Route::get('/_styleguide', fn () => Inertia::render('Styleguide'))->name('styleg
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Sitemap — serve the pre-generated static file; run `php artisan sitemap:generate` first
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+    if (!file_exists($path)) {
+        // Generate on-demand on first request if missing
+        \Illuminate\Support\Facades\Artisan::call('sitemap:generate');
+    }
+    return response()->file($path, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
+
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
-Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+Route::get('/search', [SearchController::class, 'index'])->name('search.index')->middleware('throttle:60,1');
 Route::get('/compare', [CompareController::class, 'index'])->name('compare.index');
 
 // ── Cart (Inertia page + JSON API — accessible to guests and auth users) ──────
 Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
 
 // ── Checkout (guest + auth — no login required per access model) ──────────────
-Route::get('/checkout',                                    [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout',                                   [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout',  [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:10,1');
 Route::get('/checkout/confirmation/{orderNumber}',         [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 
 // ── Payment initiation + provider return ─────────────────────────────────────
@@ -120,7 +130,7 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::post('/cart/merge',                       [CartController::class, 'merge'])->name('cart.merge')->middleware('auth');
 
     // Search JSON API
-    Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+    Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions')->middleware('throttle:60,1');
     Route::get('/search/trending',    [SearchController::class, 'trending'])->name('search.trending');
 
     // Compare JSON API (prefetch product data)

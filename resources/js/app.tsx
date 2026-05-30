@@ -4,6 +4,7 @@ import './bootstrap';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { lazy, Suspense } from 'react';
 import { configureEcho } from '@laravel/echo-react';
 import { useCartStore } from './stores/cartStore';
 
@@ -43,16 +44,27 @@ router.on('navigate', (event) => {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// Code-split every page via React.lazy — each page becomes its own async chunk.
+// Vite splits the glob into per-file chunks automatically.
+const pages = import.meta.glob('./Pages/**/*.tsx');
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.tsx`,
-            import.meta.glob('./Pages/**/*.tsx'),
-        ),
+    resolve: (name) => {
+        const page = pages[`./Pages/${name}.tsx`];
+        if (!page) throw new Error(`Page not found: ${name}`);
+        // Wrap in lazy() so React suspends until the chunk loads
+        const LazyPage = lazy(page as () => Promise<{ default: React.ComponentType }>);
+        return { default: LazyPage } as unknown as ReturnType<typeof resolvePageComponent>;
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
-        root.render(<App {...props} />);
+        // Suspense boundary shows nothing while the page chunk loads (Inertia handles progress)
+        root.render(
+            <Suspense fallback={null}>
+                <App {...props} />
+            </Suspense>
+        );
     },
     progress: {
         color: '#e7901d',

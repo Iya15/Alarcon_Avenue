@@ -3,6 +3,7 @@
 use App\Console\Commands\AggregateAnalytics;
 use App\Console\Commands\BuildProductRecommendations;
 use App\Console\Commands\FlagAbandonedCarts;
+use App\Console\Commands\GenerateSitemap;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -20,3 +21,6 @@ Schedule::command(BuildProductRecommendations::class)->dailyAt('02:00')->without
 
 // Flag carts idle for more than ABANDONMENT_HOURS (default 4) as abandoned.
 Schedule::command(FlagAbandonedCarts::class)->hourly()->withoutOverlapping();
+
+// Regenerate XML sitemap daily.
+Schedule::command(GenerateSitemap::class)->dailyAt('03:00')->withoutOverlapping();

@@ -4,6 +4,7 @@ import Card from '@/Components/ui/Card';
 import AddToCartButton from '@/Components/cart/AddToCartButton';
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
+import SeoHead from '@/Components/layout/SeoHead';
 import ReviewSection from '@/Components/reviews/ReviewSection';
 import type { Review } from '@/Components/reviews/ReviewSection';
 import type { PageProps } from '@/types';
@@ -270,10 +271,60 @@ export default function ProductShow({ product, relatedProducts }: Props) {
         ? Math.round((1 - price / comparePrice) * 100)
         : null;
 
+    // ── JSON-LD Product schema ────────────────────────────────────────────────
+    const primaryImageUrl = product.images.find((i) => i.is_primary)?.url ?? product.images[0]?.url;
+    const canonicalUrl    = typeof window !== 'undefined'
+        ? `${window.location.origin}/products/${product.slug}`
+        : `/products/${product.slug}`;
+
+    const productSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name:  product.name,
+        description: product.short_description ?? product.meta_description ?? undefined,
+        url:   canonicalUrl,
+        image: primaryImageUrl ? [primaryImageUrl] : undefined,
+        offers: {
+            '@type': 'Offer',
+            price:        (price / 100).toFixed(2),
+            priceCurrency: 'PHP',
+            availability: inStock
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            url: canonicalUrl,
+        },
+        ...(product.rating_average !== null && product.review_count > 0 ? {
+            aggregateRating: {
+                '@type':       'AggregateRating',
+                ratingValue:   product.rating_average.toFixed(1),
+                reviewCount:   product.review_count,
+                bestRating:    '5',
+                worstRating:   '1',
+            },
+        } : {}),
+    };
+
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type':    'BreadcrumbList',
+        itemListElement: breadcrumbs.map((crumb, idx) => ({
+            '@type':    'ListItem',
+            position:   idx + 1,
+            name:       crumb.label,
+            item:       crumb.href ? (typeof window !== 'undefined' ? `${window.location.origin}${crumb.href}` : crumb.href) : undefined,
+        })),
+    };
+
     return (
         <PageLayout breadcrumbs={breadcrumbs}>
-            <Head title={product.meta_title ?? product.name} />
-            {product.meta_description && <meta name="description" content={product.meta_description} />}
+            <SeoHead
+                title={product.meta_title ?? product.name}
+                description={product.meta_description ?? product.short_description}
+                image={primaryImageUrl}
+                type="product"
+                canonicalUrl={canonicalUrl}
+                jsonLd={[productSchema, breadcrumbSchema]}
+            />
 
             <Container className="py-8 lg:py-12">
                 <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">

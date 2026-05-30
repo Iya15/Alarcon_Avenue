@@ -58,16 +58,16 @@ class AnalyticsController extends Controller
                 'new_customers'  => $newCustomers,
             ],
             'revenue_chart' => $sales->map(fn ($s) => [
-                'date'        => $s->date->toDateString(),
+                'date'        => $s->date,
                 'gross_cents' => $s->gross_cents,
                 'net_cents'   => $s->net_cents,
             ])->values(),
             'orders_chart' => $sales->map(fn ($s) => [
-                'date'         => $s->date->toDateString(),
+                'date'         => $s->date,
                 'orders_count' => $s->orders_count,
             ])->values(),
             'traffic_chart' => $traffic->map(fn ($t) => [
-                'date'          => $t->date->toDateString(),
+                'date'          => $t->date,
                 'sessions'      => $t->sessions,
                 'product_views' => $t->product_views,
             ])->values(),

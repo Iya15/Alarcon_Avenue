@@ -5,7 +5,7 @@ import Checkbox from '@/Components/ui/Checkbox';
 import Input from '@/Components/ui/Input';
 import Modal from '@/Components/ui/Modal';
 import Select from '@/Components/ui/Select';
-import Container from '@/Components/layout/Container';
+import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -67,9 +67,8 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
     };
 
     return (
-        <>
-            <Head title={isEditing ? `Edit ${product!.name}` : 'New Product'} />
-            <Container className="py-8">
+        <AdminLayout title={isEditing ? `Edit ${product!.name}` : 'New Product'}>
+            <Head title={isEditing ? `Edit ${product!.name}` : 'New Product — Admin'} />
                 <div className="mb-6 flex items-center gap-4">
                     <Link href={route('admin.products.index')} className="text-sm text-ink-500 hover:text-ink-900">← Products</Link>
                     <h1 className="text-2xl font-bold tracking-tight text-ink-950">
@@ -230,8 +229,7 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                         <AddVariantModal open={addVariantOpen} onClose={() => setAddVariantOpen(false)} productId={product!.id} attributes={attributes.data} />
                     </div>
                 )}
-            </Container>
-        </>
+        </AdminLayout>
     );
 }
 

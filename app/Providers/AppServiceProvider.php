@@ -13,6 +13,7 @@ use App\Listeners\SendOrderPaidEmail;
 use App\Models\Brand;
 use App\Models\Coupon;
 use App\Observers\AdminAuditObserver;
+use App\Observers\CategoryObserver;
 use App\Observers\ReviewObserver;
 use App\Policies\CouponPolicy;
 use App\Services\Payment\PaymentGatewayManager;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         Review::observe(ReviewObserver::class);
+        Category::observe(CategoryObserver::class);
 
         // Audit trail for admin-managed models
         foreach ([Product::class, Category::class, Order::class, Coupon::class, User::class] as $model) {
