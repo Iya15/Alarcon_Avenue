@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Inventory;
 use App\Models\Product;
@@ -17,6 +18,7 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $categories = Category::whereNotNull('parent_id')->get();
+        $brands     = Brand::all();
         $colorAttr = Attribute::where('name', 'color')->first();
         $sizeAttr = Attribute::where('name', 'size')->first();
 
@@ -38,6 +40,9 @@ class ProductSeeder extends Seeder
                 'cost_price_cents' => (int) ($basePrice * 0.4),
                 'status' => 'active',
                 'is_featured' => $i < 5,
+                'brand_id' => $brands->isNotEmpty() ? $brands->random()->id : null,
+                'rating_average' => fake()->optional(0.7)->randomFloat(2, 3.0, 5.0),
+                'review_count' => fake()->numberBetween(0, 120),
             ]);
 
             $product->categories()->attach($category->id);

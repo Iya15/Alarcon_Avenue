@@ -1,12 +1,15 @@
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Card from '@/Components/ui/Card';
+import AddToCartButton from '@/Components/cart/AddToCartButton';
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
+import ReviewSection from '@/Components/reviews/ReviewSection';
+import type { Review } from '@/Components/reviews/ReviewSection';
 import type { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Inventory { available: number; in_stock: boolean; is_low_stock: boolean }
 interface AttributeValue { id: number; attribute_id: number; value: string; display_value: string; meta: Record<string, string> | null }
@@ -30,7 +33,8 @@ interface Product {
     categories: Category[];
     images: ProductImage[];
     variants: Variant[];
-    review_count: number; average_rating: number | null;
+    rating_average: number | null; review_count: number;
+    reviews: Review[];
 }
 
 interface ProductCard {
@@ -192,9 +196,24 @@ function VariantSelector({
 }
 
 export default function ProductShow({ product, relatedProducts }: Props) {
+    const { auth } = usePage<PageProps>().props;
     const activeVariants = product.variants.filter((v) => v.is_active);
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(activeVariants[0] ?? null);
     const [quantity, setQuantity] = useState(1);
+
+    // Track recently viewed — authenticated users: POST to server; guests: localStorage
+    useEffect(() => {
+        if (auth.user) {
+            window.axios.post('/api/account/recently-viewed', { product_id: product.id }).catch(() => {});
+        } else {
+            try {
+                const key = 'aa_rv';
+                const existing: number[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+                const updated = [product.id, ...existing.filter((id) => id !== product.id)].slice(0, 20);
+                localStorage.setItem(key, JSON.stringify(updated));
+            } catch {}
+        }
+    }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const price = selectedVariant?.effective_price ?? product.base_price_cents;
     const comparePrice = selectedVariant?.compare_at_price_cents ?? product.compare_at_price_cents;
@@ -249,16 +268,16 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                 {product.name}
                             </h1>
 
-                            {product.average_rating && (
+                            {product.rating_average !== null && product.review_count > 0 && (
                                 <div className="mt-2 flex items-center gap-1.5">
                                     <div className="flex">
                                         {[1,2,3,4,5].map((s) => (
-                                            <svg key={s} className={`h-4 w-4 ${s <= Math.round(product.average_rating!) ? 'text-brand-500' : 'text-ink-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                                            <svg key={s} className={`h-4 w-4 ${s <= Math.round(product.rating_average!) ? 'text-[#e7901d]' : 'text-ink-200'}`} fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                             </svg>
                                         ))}
                                     </div>
-                                    <span className="text-sm text-ink-500">{product.average_rating} ({product.review_count} reviews)</span>
+                                    <span className="text-sm text-ink-500">{product.rating_average.toFixed(1)} ({product.review_count} reviews)</span>
                                 </div>
                             )}
                         </div>
@@ -331,13 +350,15 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                 </button>
                             </div>
 
-                            <Button
+                            <AddToCartButton
+                                variantId={selectedVariant?.id ?? 0}
+                                quantity={quantity}
+                                outOfStock={!inStock}
+                                disabled={!selectedVariant}
                                 className="flex-1"
                                 size="lg"
-                                disabled={!inStock || !selectedVariant}
-                            >
-                                {inStock ? 'Add to Cart' : 'Out of Stock'}
-                            </Button>
+                                fullWidth={false}
+                            />
                         </div>
 
                         <p className="text-xs text-ink-400">
@@ -357,17 +378,13 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                     </div>
                 )}
 
-                {/* Reviews placeholder */}
-                <div className="mt-16 border-t border-ink-200 pt-10">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold tracking-tight text-ink-950">
-                            Reviews ({product.review_count})
-                        </h2>
-                    </div>
-                    {product.review_count === 0 && (
-                        <p className="mt-4 text-sm text-ink-500">No reviews yet. Be the first to review this product.</p>
-                    )}
-                </div>
+                <ReviewSection
+                    productId={product.id}
+                    productSlug={product.slug}
+                    reviews={product.reviews ?? []}
+                    ratingAverage={product.rating_average}
+                    reviewCount={product.review_count}
+                />
 
                 {/* Related products */}
                 {relatedProducts.length > 0 && (

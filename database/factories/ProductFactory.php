@@ -15,6 +15,7 @@ class ProductFactory extends Factory
         $basePrice = fake()->numberBetween(5000, 500000);
 
         return [
+            'brand_id' => null,
             'name' => ucwords($name),
             'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1, 99999),
             'description' => fake()->paragraphs(3, true),
@@ -24,6 +25,8 @@ class ProductFactory extends Factory
             'cost_price_cents' => fake()->optional(0.6)->numberBetween((int) ($basePrice * 0.3), $basePrice),
             'status' => 'active',
             'is_featured' => fake()->boolean(15),
+            'rating_average' => null,
+            'review_count' => 0,
             'meta_title' => null,
             'meta_description' => null,
         ];

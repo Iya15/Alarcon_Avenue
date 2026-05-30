@@ -9,8 +9,6 @@ class ProductDetailResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $approvedReviews = $this->whenLoaded('approvedReviews');
-
         return [
             'id'                     => $this->id,
             'name'                   => $this->name,
@@ -23,16 +21,39 @@ class ProductDetailResource extends JsonResource
             'is_featured'            => $this->is_featured,
             'meta_title'             => $this->meta_title,
             'meta_description'       => $this->meta_description,
-            'categories'             => CategoryResource::collection($this->whenLoaded('categories')),
-            'images'                 => ProductImageResource::collection($this->whenLoaded('images')),
-            'variants'               => ProductVariantResource::collection($this->whenLoaded('variants')),
-            'review_count'           => $this->when(
-                $approvedReviews !== null,
-                fn () => $approvedReviews->count()
+
+            // Use manual mapping (not ResourceCollection) to avoid a nested `data` wrapper
+            // when the resource is serialized through Inertia's prop pipeline.
+            'categories' => $this->whenLoaded('categories', fn () =>
+                $this->categories->map(fn ($c) => (new CategoryResource($c))->resolve())->values()->all()
             ),
-            'average_rating'         => $this->when(
-                $approvedReviews !== null && $approvedReviews->isNotEmpty(),
-                fn () => round($approvedReviews->avg('rating'), 1)
+            'images' => $this->whenLoaded('images', fn () =>
+                $this->images->map(fn ($i) => (new ProductImageResource($i))->resolve())->values()->all()
+            ),
+            'variants' => $this->whenLoaded('variants', fn () =>
+                $this->variants->map(fn ($v) => (new ProductVariantResource($v))->resolve())->values()->all()
+            ),
+
+            'rating_average' => $this->rating_average,
+            'review_count'   => $this->review_count,
+
+            'reviews' => $this->whenLoaded('publishedReviews', fn () =>
+                $this->publishedReviews->map(fn ($r) => [
+                    'id'               => $r->id,
+                    'rating'           => $r->rating,
+                    'title'            => $r->title,
+                    'body'             => $r->body,
+                    'verified_purchase' => $r->verified_purchase,
+                    'helpful_count'    => $r->helpful_count,
+                    'created_at'       => $r->created_at?->toISOString(),
+                    'user'             => ['id' => $r->user?->id, 'name' => $r->user?->name],
+                    'media'            => $r->media->map(fn ($m) => [
+                        'id'         => $m->id,
+                        'url'        => \Illuminate\Support\Facades\Storage::disk('media')->url($m->path),
+                        'type'       => $m->type,
+                        'sort_order' => $m->sort_order,
+                    ])->values()->all(),
+                ])->values()->all()
             ),
         ];
     }

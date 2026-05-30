@@ -18,9 +18,15 @@ class ProductVariantResource extends JsonResource
             'cost_price_cents'       => $this->cost_price_cents,
             'effective_price'        => $this->effective_price,
             'weight_grams'           => $this->weight_grams,
-            'attribute_values'       => AttributeValueResource::collection($this->whenLoaded('attributeValues')),
-            'inventory'              => new InventoryResource($this->whenLoaded('inventory')),
-            'images'                 => ProductImageResource::collection($this->whenLoaded('images')),
+            'attribute_values' => $this->whenLoaded('attributeValues', fn () =>
+                $this->attributeValues->map(fn ($av) => (new AttributeValueResource($av))->resolve())->values()->all()
+            ),
+            'inventory' => $this->whenLoaded('inventory', fn () =>
+                $this->inventory ? (new InventoryResource($this->inventory))->resolve() : null
+            ),
+            'images' => $this->whenLoaded('images', fn () =>
+                $this->images->map(fn ($i) => (new ProductImageResource($i))->resolve())->values()->all()
+            ),
         ];
     }
 }

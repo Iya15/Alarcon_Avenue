@@ -44,7 +44,8 @@ class ProductController extends Controller
                 'variants.attributeValues.attribute',
                 'variants.inventory',
                 'variants.images',
-                'approvedReviews',
+                'publishedReviews.user',
+                'publishedReviews.media',
             ])
             ->firstOrFail();
 
