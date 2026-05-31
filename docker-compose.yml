@@ -1,0 +1,28 @@
+services:
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.13
+    container_name: alarcon_meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+      # Remove MEILI_MASTER_KEY to run without auth in local dev.
+      # If you set one here, also set MEILISEARCH_KEY in .env to the same value.
+      # MEILI_MASTER_KEY: "your-local-secret"
+    volumes:
+      - meilisearch_data:/meili_data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: alarcon_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  meilisearch_data:
+  redis_data:
