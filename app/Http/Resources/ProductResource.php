@@ -26,10 +26,18 @@ class ProductResource extends JsonResource
             'created_at'             => $this->created_at?->toISOString(),
             'updated_at'             => $this->updated_at?->toISOString(),
             'deleted_at'             => $this->deleted_at?->toISOString(),
-            'categories'             => CategoryResource::collection($this->whenLoaded('categories')),
-            'images'                 => ProductImageResource::collection($this->whenLoaded('images')),
-            'variants'               => ProductVariantResource::collection($this->whenLoaded('variants')),
-            'primary_image'          => new ProductImageResource($this->whenLoaded('primaryImage')),
+            'categories' => $this->whenLoaded('categories', fn () =>
+                $this->categories->map(fn ($c) => (new CategoryResource($c))->resolve())->values()->all()
+            ),
+            'images' => $this->whenLoaded('images', fn () =>
+                $this->images->map(fn ($i) => (new ProductImageResource($i))->resolve())->values()->all()
+            ),
+            'variants' => $this->whenLoaded('variants', fn () =>
+                $this->variants->map(fn ($v) => (new ProductVariantResource($v))->resolve())->values()->all()
+            ),
+            'primary_image' => $this->whenLoaded('primaryImage', fn () =>
+                $this->primaryImage ? (new ProductImageResource($this->primaryImage))->resolve() : null
+            ),
         ];
     }
 }

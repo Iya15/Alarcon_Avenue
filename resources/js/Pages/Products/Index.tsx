@@ -1,13 +1,11 @@
 import Badge from '@/Components/ui/Badge';
-import Button from '@/Components/ui/Button';
-import Card from '@/Components/ui/Card';
 import EmptyState from '@/Components/ui/EmptyState';
 import Skeleton from '@/Components/ui/Skeleton';
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
 import SeoHead from '@/Components/layout/SeoHead';
 import type { PageProps } from '@/types';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
@@ -17,15 +15,29 @@ interface ProductCard {
     base_price_cents: number; compare_at_price_cents: number | null;
     lowest_price_cents: number; in_stock: boolean; is_featured: boolean;
     primary_image: ProductImage | null;
-    categories: string[];
+    categories?: string[];
 }
 interface Category { id: number; name: string; slug: string; children?: Category[] }
-interface PaginatedProducts { data: ProductCard[]; links: { url: string | null; label: string; active: boolean }[]; meta: { current_page: number; last_page: number; total: number } }
+
+// LengthAwarePaginator flat structure produced by ->through()->toArray()
+interface PageLink { url: string | null; label: string; active: boolean }
+interface PaginatedProducts {
+    data: ProductCard[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+    links: PageLink[];
+}
 
 interface Props extends PageProps {
     products: PaginatedProducts;
     categories: Category[];
-    category?: { id: number; name: string; slug: string; description: string | null; image_url: string | null; parent: Category | null };
+    category?: {
+        id: number; name: string; slug: string;
+        description: string | null; image_url: string | null;
+        parent?: { name: string; slug: string } | null;
+    };
     filters: { sort?: string };
     title: string;
 }
@@ -48,14 +60,11 @@ function ProductCardSkeleton() {
 
 function ProductCardItem({ product }: { product: ProductCard }) {
     return (
-        <motion.div
-            whileHover={{ y: -3 }}
-            transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-        >
+        <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}>
             <Link href={route('products.show', product.slug)} className="group block">
                 <div className="relative overflow-hidden rounded-xl bg-ink-100">
                     <div className="aspect-[4/5]">
-                        {product.primary_image ? (
+                        {product.primary_image?.url ? (
                             <img
                                 src={product.primary_image.url}
                                 alt={product.primary_image.alt_text ?? product.name}
@@ -72,7 +81,7 @@ function ProductCardItem({ product }: { product: ProductCard }) {
                     </div>
 
                     <div className="absolute left-2 top-2 flex flex-col gap-1">
-                        {! product.in_stock && (
+                        {!product.in_stock && (
                             <Badge variant="inverted" size="sm">Out of Stock</Badge>
                         )}
                         {product.compare_at_price_cents && product.compare_at_price_cents > product.base_price_cents && (
@@ -111,38 +120,39 @@ const sortOptions = [
 ];
 
 export default function ProductsIndex({ products, categories, category, filters, title }: Props) {
-    const [sort, setSort]           = useState(filters.sort ?? 'newest');
-    // Accumulate product cards across infinite-scroll pages; reset when sort/filter changes
-    const [allProducts, setAllProducts] = useState<ProductCard[]>(products.data);
+    const [sort, setSort]               = useState(filters?.sort ?? 'newest');
+    const [allProducts, setAllProducts] = useState<ProductCard[]>(products.data ?? []);
     const [loadingMore, setLoadingMore] = useState(false);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    // Reset accumulated list when the products prop changes (new filter/sort visit)
+    // Reset list when a new first-page visit arrives (sort/filter change)
     useEffect(() => {
-        setAllProducts(products.data);
-    }, [products.meta.current_page === 1 ? products.data : null]); // eslint-disable-line
+        if (products.current_page === 1) {
+            setAllProducts(products.data ?? []);
+        }
+    }, [products.current_page, products.data]);
 
-    // Intersection observer: load next page when sentinel enters viewport
+    // Infinite scroll: append next page when sentinel enters viewport
     useEffect(() => {
-        if (!sentinelRef.current || products.meta.current_page >= products.meta.last_page) return;
+        const sentinel = sentinelRef.current;
+        if (!sentinel || products.current_page >= products.last_page) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (!entry.isIntersecting || loadingMore) return;
-                const nextPage = products.meta.current_page + 1;
                 setLoadingMore(true);
                 router.get(
                     window.location.pathname,
-                    { ...Object.fromEntries(new URLSearchParams(window.location.search)), page: nextPage },
+                    { ...Object.fromEntries(new URLSearchParams(window.location.search)), page: products.current_page + 1 },
                     {
                         preserveScroll: true,
                         preserveState: true,
                         only: ['products'],
                         onSuccess: (page) => {
-                            const next = (page.props as { products: typeof products }).products;
+                            const next = (page.props as unknown as Props).products;
                             setAllProducts((prev) => {
-                                const existingIds = new Set(prev.map((p) => p.id));
-                                return [...prev, ...next.data.filter((p) => !existingIds.has(p.id))];
+                                const seen = new Set(prev.map((p) => p.id));
+                                return [...prev, ...(next.data ?? []).filter((p) => !seen.has(p.id))];
                             });
                             setLoadingMore(false);
                         },
@@ -150,11 +160,12 @@ export default function ProductsIndex({ products, categories, category, filters,
                     }
                 );
             },
-            { rootMargin: '200px' }
+            { rootMargin: '300px' }
         );
-        observer.observe(sentinelRef.current);
+
+        observer.observe(sentinel);
         return () => observer.disconnect();
-    }, [products.meta.current_page, products.meta.last_page, loadingMore]); // eslint-disable-line
+    }, [products.current_page, products.last_page, loadingMore]);
 
     const handleSort = (value: string) => {
         setSort(value);
@@ -164,11 +175,11 @@ export default function ProductsIndex({ products, categories, category, filters,
 
     const breadcrumbs = category
         ? [
-            { label: 'Home', href: '/' },
+            { label: 'Home', href: route('home') },
             ...(category.parent ? [{ label: category.parent.name, href: route('categories.show', category.parent.slug) }] : []),
             { label: category.name },
           ]
-        : [{ label: 'Home', href: '/' }, { label: 'Products' }];
+        : [{ label: 'Home', href: route('home') }, { label: 'Products' }];
 
     return (
         <PageLayout breadcrumbs={breadcrumbs}>
@@ -179,6 +190,7 @@ export default function ProductsIndex({ products, categories, category, filters,
             />
 
             <Container className="py-8 lg:py-12">
+                {/* Category header */}
                 {category && (
                     <div className="mb-8">
                         {category.image_url && (
@@ -197,15 +209,18 @@ export default function ProductsIndex({ products, categories, category, filters,
                     <h1 className="mb-8 text-3xl font-bold tracking-tight text-ink-950 lg:text-4xl">{title}</h1>
                 )}
 
-                <div className="flex items-center justify-between gap-4 border-b border-ink-200 pb-4 mb-6">
-                    <p className="text-sm text-ink-500">{products.meta.total.toLocaleString()} products</p>
+                {/* Sort bar */}
+                <div className="mb-6 flex items-center justify-between gap-4 border-b border-ink-200 pb-4">
+                    <p className="text-sm text-ink-500">
+                        {(products.total ?? 0).toLocaleString()} product{products.total !== 1 ? 's' : ''}
+                    </p>
                     <div className="flex items-center gap-2">
                         <label htmlFor="sort" className="text-sm text-ink-500">Sort</label>
                         <select
                             id="sort"
                             value={sort}
                             onChange={(e) => handleSort(e.target.value)}
-                            className="rounded-lg border border-ink-200 bg-surface px-3 py-1.5 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            className="rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
                         >
                             {sortOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -214,20 +229,21 @@ export default function ProductsIndex({ products, categories, category, filters,
                     </div>
                 </div>
 
-                {allProducts.length === 0 ? (
+                {/* Product grid */}
+                {allProducts.length === 0 && !loadingMore ? (
                     <EmptyState
                         title="No products found"
                         description="Try a different category or check back later."
                     />
                 ) : (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         {allProducts.map((product) => (
                             <ProductCardItem key={product.id} product={product} />
                         ))}
                     </div>
                 )}
 
-                {/* Infinite-scroll sentinel — IntersectionObserver watches this */}
+                {/* Infinite scroll sentinel */}
                 <div ref={sentinelRef} className="h-1" aria-hidden />
 
                 {loadingMore && (
@@ -236,24 +252,22 @@ export default function ProductsIndex({ products, categories, category, filters,
                     </div>
                 )}
 
-                {/* Accessible pagination fallback for no-JS / SEO */}
-                {products.meta.last_page > 1 && (
+                {/* Accessible pagination fallback (no-JS) */}
+                {products.last_page > 1 && (
                     <noscript>
-                        <div className="mt-10 flex items-center justify-center gap-1">
-                            {products.links.map((link, i) => (
+                        <div className="mt-10 flex flex-wrap items-center justify-center gap-1">
+                            {(products.links ?? []).map((link, i) => (
                                 link.url ? (
-                                    <a
-                                        key={i}
-                                        href={link.url}
+                                    <a key={i} href={link.url}
                                         className={`flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-3 text-sm transition-colors
                                             ${link.active ? 'bg-brand text-white font-medium' : 'border border-ink-200 text-ink-700 hover:bg-ink-50'}`}
-                                    >
-                                        {link.label.replace(/&laquo;|&raquo;/g, (m) => m === '&laquo;' ? '«' : '»')}
-                                    </a>
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
                                 ) : (
-                                    <span key={i} className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-ink-200 px-3 text-sm text-ink-300 cursor-default">
-                                        {link.label.replace(/&laquo;|&raquo;/g, (m) => m === '&laquo;' ? '«' : '»')}
-                                    </span>
+                                    <span key={i}
+                                        className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-ink-200 px-3 text-sm text-ink-300 cursor-default"
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
                                 )
                             ))}
                         </div>

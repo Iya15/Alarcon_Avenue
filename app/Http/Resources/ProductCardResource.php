@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCardResource extends JsonResource
 {
@@ -29,10 +30,13 @@ class ProductCardResource extends JsonResource
             'status'                 => $this->status,
             'is_featured'            => $this->is_featured,
             'in_stock'               => $inStock,
-            'primary_image'          => $this->whenLoaded('primaryImage',
-                fn () => $this->primaryImage
-                    ? new ProductImageResource($this->primaryImage)
-                    : null
+            // Build as a plain array (same approach as RecentlyViewedController) so Inertia
+            // never wraps it in a { data: {...} } envelope, which would break primary_image.url.
+            'primary_image' => $this->whenLoaded('primaryImage', fn () =>
+                $this->primaryImage ? [
+                    'url'      => Storage::disk('media')->url($this->primaryImage->path),
+                    'alt_text' => $this->primaryImage->alt_text,
+                ] : null
             ),
             'categories'             => $this->when(
                 $this->relationLoaded('categories'),

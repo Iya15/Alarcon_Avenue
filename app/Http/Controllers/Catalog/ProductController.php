@@ -28,9 +28,9 @@ class ProductController extends Controller
             ->withQueryString();
 
         return Inertia::render('Products/Index', [
-            'products'   => ProductCardResource::collection($products),
+            'products'   => $products->through(fn ($p) => (new ProductCardResource($p))->resolve()),
             'categories' => $this->categoryTree(),
-            'filters'    => $request->only('sort'),
+            'filters'    => ['sort' => $request->input('sort')],
             'title'      => 'All Products',
         ]);
     }

@@ -32,12 +32,12 @@ class CategoryController extends Controller
             ->withQueryString();
 
         return Inertia::render('Products/Index', [
-            'products'   => ProductCardResource::collection($products),
-            'category'   => new CategoryResource($category->load('parent')),
+            'products'   => $products->through(fn ($p) => (new ProductCardResource($p))->resolve()),
+            'category'   => (new CategoryResource($category->load('parent')))->resolve(),
             'categories' => CategoryResource::collection(
                 Category::with('children')->whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->get()
             )->resolve(),
-            'filters'    => $request->only('sort'),
+            'filters'    => ['sort' => $request->input('sort')],
             'title'      => $category->name,
         ]);
     }
