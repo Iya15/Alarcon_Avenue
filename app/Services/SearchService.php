@@ -32,6 +32,7 @@ class SearchService
         $filters  = $this->buildFilterExpression($request);
         $sortExpr = $this->buildSortExpression($sort);
 
+        // Primary search: full filter applied → correct hits + pagination
         $raw = Product::search($query, function ($meiliSearch, string $q, array $options) use ($filters, $sortExpr, $page) {
             if ($filters) {
                 $options['filter'] = $filters;
@@ -55,7 +56,63 @@ class SearchService
             return $meiliSearch->search($q, $options);
         })->raw();
 
+        // Secondary facet search: filter WITHOUT category/brand so all options stay
+        // visible regardless of what the user has already selected. hitsPerPage=0
+        // means Meilisearch computes facets only — very fast, no documents returned.
+        if ($request->input('categories') || $request->input('brand_ids')) {
+            $baseFilter = $this->buildBaseFacetFilter($request);
+
+            $facetRaw = Product::search($query, function ($meiliSearch, string $q, array $options) use ($baseFilter) {
+                $options['filter']      = $baseFilter;
+                $options['facets']      = ['category_ids', 'brand_id'];
+                $options['hitsPerPage'] = 0;
+
+                return $meiliSearch->search($q, $options);
+            })->raw();
+
+            // Overlay the "sticky" category/brand facet counts onto the main result
+            $raw['facetDistribution']['category_ids'] = $facetRaw['facetDistribution']['category_ids'] ?? [];
+            $raw['facetDistribution']['brand_id']     = $facetRaw['facetDistribution']['brand_id'] ?? [];
+        }
+
         return $this->formatResults($raw, $page);
+    }
+
+    /**
+     * Build a filter expression that includes everything EXCEPT category and brand
+     * filters. Used for the secondary facet-only request so all category/brand
+     * options remain visible when the user has already selected some.
+     */
+    private function buildBaseFacetFilter(SearchRequest $request): string
+    {
+        $parts = ['status = "active"'];
+
+        if ($colors = $request->input('colors')) {
+            $quoted  = implode(',', array_map(fn ($c) => '"' . addslashes($c) . '"', (array) $colors));
+            $parts[] = "colors IN [{$quoted}]";
+        }
+        if ($sizes = $request->input('sizes')) {
+            $quoted  = implode(',', array_map(fn ($s) => '"' . addslashes($s) . '"', (array) $sizes));
+            $parts[] = "sizes IN [{$quoted}]";
+        }
+        if ($materials = $request->input('materials')) {
+            $quoted  = implode(',', array_map(fn ($m) => '"' . addslashes($m) . '"', (array) $materials));
+            $parts[] = "materials IN [{$quoted}]";
+        }
+        if ($request->boolean('in_stock'))    { $parts[] = 'in_stock = true'; }
+        if ($request->boolean('has_discount')) { $parts[] = 'has_discount = true'; }
+
+        if (($min = $request->input('price_min')) !== null) {
+            $parts[] = 'lowest_variant_price_cents >= ' . (int) $min;
+        }
+        if (($max = $request->input('price_max')) !== null) {
+            $parts[] = 'lowest_variant_price_cents <= ' . (int) $max;
+        }
+        if ($ratingMin = $request->input('rating_min')) {
+            $parts[] = 'rating_average >= ' . (float) $ratingMin;
+        }
+
+        return implode(' AND ', $parts);
     }
 
     public function suggestions(string $query, int $limit = 8): array

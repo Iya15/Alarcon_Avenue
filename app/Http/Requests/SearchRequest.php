@@ -47,10 +47,14 @@ class SearchRequest extends FormRequest
 
     public function activeFilters(): array
     {
+        // Cast ID arrays to integers so they serialize as JS numbers — prevents the
+        // type mismatch where URL params arrive as strings but facet IDs are numbers.
+        $toInts = fn ($val) => $val ? array_values(array_map('intval', (array) $val)) : null;
+
         return array_filter([
             'q'           => $this->input('q'),
-            'categories'  => $this->input('categories'),
-            'brand_ids'   => $this->input('brand_ids'),
+            'categories'  => $toInts($this->input('categories')),
+            'brand_ids'   => $toInts($this->input('brand_ids')),
             'colors'      => $this->input('colors'),
             'sizes'       => $this->input('sizes'),
             'materials'   => $this->input('materials'),

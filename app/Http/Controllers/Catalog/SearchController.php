@@ -10,6 +10,7 @@ use App\Services\SearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +20,25 @@ class SearchController extends Controller
 
     public function index(SearchRequest $request): Response
     {
-        $results = $this->search->search($request);
+        $searchError = null;
+        try {
+            $results = $this->search->search($request);
+            $offline = false;
+        } catch (\Throwable $e) {
+            Log::warning('Search failed', [
+                'exception' => get_class($e),
+                'message'   => $e->getMessage(),
+                'query'     => $request->input('q'),
+            ]);
+            $results = [
+                'hits'       => [],
+                'pagination' => ['page' => 1, 'hitsPerPage' => 24, 'totalHits' => 0, 'totalPages' => 1],
+                'facets'     => ['categories' => [], 'brands' => [], 'colors' => [], 'sizes' => [], 'materials' => [], 'in_stock' => 0, 'has_discount' => 0, 'price_min' => 0, 'price_max' => 0],
+            ];
+            $offline = true;
+            // In local/dev only, surface the real error so it's visible in the UI
+            $searchError = app()->isLocal() ? get_class($e).': '.$e->getMessage() : null;
+        }
 
         return Inertia::render('Search/Index', [
             'query'   => $request->input('q', ''),
@@ -27,6 +46,8 @@ class SearchController extends Controller
             'results' => $results['hits'],
             'pagination' => $results['pagination'],
             'facets'  => $results['facets'],
+            'searchOffline' => $offline,
+            'searchError'   => $searchError,
             'brands'  => fn () => Brand::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']),
             'categories' => fn () => Category::with('children')
                 ->whereNull('parent_id')

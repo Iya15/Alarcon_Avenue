@@ -70,6 +70,8 @@ interface Props extends PageProps {
     filters: ActiveSearchFilters;
     brands: { id: number; name: string; slug: string }[];
     categories: { id: number; name: string; slug: string }[];
+    searchOffline?: boolean;
+    searchError?: string | null;
 }
 
 function formatPrice(cents: number) {
@@ -174,7 +176,7 @@ function buildFilterBadges(filters: ActiveSearchFilters, facets: Facets): { key:
     return badges;
 }
 
-export default function SearchIndex({ query, results, pagination, facets, filters, brands, categories }: Props) {
+export default function SearchIndex({ query, results, pagination, facets, filters, brands, categories, searchOffline, searchError }: Props) {
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
     const handleSort = (sort: string) => {
@@ -193,6 +195,25 @@ export default function SearchIndex({ query, results, pagination, facets, filter
             <Head title={query ? `"${query}" — Search` : 'Search'} />
 
             <Container className="py-6 lg:py-10">
+                {searchOffline && (
+                    <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        <div className="flex items-start gap-3">
+                            <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                            <span>Search is currently unavailable. Make sure Docker is running (<code className="rounded bg-amber-100 px-1 font-mono text-xs">docker compose up -d</code>) then re-index (<code className="rounded bg-amber-100 px-1 font-mono text-xs">php artisan scout:import "App\Models\Product"</code>).</span>
+                        </div>
+                        {searchError && (
+                            <details className="mt-2 ml-7">
+                                <summary className="cursor-pointer text-xs font-medium text-amber-700 hover:underline">Show error details</summary>
+                                <code className="mt-1 block whitespace-pre-wrap break-all rounded bg-amber-100 px-2 py-1 font-mono text-xs text-amber-900">
+                                    {searchError}
+                                </code>
+                            </details>
+                        )}
+                    </div>
+                )}
+
                 {/* Search bar */}
                 <div className="mb-6 max-w-2xl">
                     <SearchInput
