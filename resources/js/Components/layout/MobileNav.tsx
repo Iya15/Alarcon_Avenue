@@ -170,7 +170,7 @@ export default function MobileNav({ open, onClose }: MobileNavProps) {
                                 {auth.user ? (
                                     <div className="space-y-1">
                                         <p className="text-xs text-ink-500">{auth.user.name}</p>
-                                        <Link href="/profile" className="block text-sm font-medium text-ink-900 hover:text-brand-500">
+                                        <Link href="/account" className="block text-sm font-medium text-ink-900 hover:text-brand-500">
                                             My Account
                                         </Link>
                                         <Link href="/account/orders" className="block text-sm text-ink-600 hover:text-ink-900">

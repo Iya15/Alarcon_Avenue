@@ -1,57 +1,12 @@
 import { cn } from '@/lib/cn';
 import SearchInput from '@/Components/search/SearchInput';
 import { useCartStore } from '@/stores/cartStore';
-import { type PageProps } from '@/types';
+import { type NavCategory, type PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Container from './Container';
 import MobileNav from './MobileNav';
-
-interface MegaMenuColumn {
-    heading: string;
-    links: Array<{ label: string; href: string }>;
-}
-
-const shopMegaMenu: MegaMenuColumn[] = [
-    {
-        heading: 'Clothing',
-        links: [
-            { label: "Men's Clothing",  href: '/categories/clothing-mens' },
-            { label: "Women's Clothing", href: '/categories/clothing-womens' },
-            { label: "Kids' Clothing",  href: '/categories/clothing-kids' },
-            { label: 'Activewear',      href: '/categories/activewear' },
-            { label: 'Formal Wear',     href: '/categories/formal-wear' },
-        ],
-    },
-    {
-        heading: 'Footwear',
-        links: [
-            { label: 'Sneakers',      href: '/categories/footwear-sneakers' },
-            { label: 'Sandals',       href: '/categories/footwear-sandals' },
-            { label: 'Boots',         href: '/categories/footwear-boots' },
-            { label: 'Formal Shoes',  href: '/categories/footwear-formal' },
-        ],
-    },
-    {
-        heading: 'Accessories',
-        links: [
-            { label: 'Bags',        href: '/categories/accessories-bags' },
-            { label: 'Watches',     href: '/categories/accessories-watches' },
-            { label: 'Jewelry',     href: '/categories/accessories-jewelry' },
-            { label: 'Sunglasses',  href: '/categories/accessories-sunglasses' },
-        ],
-    },
-    {
-        heading: 'Home & Living',
-        links: [
-            { label: 'Furniture',   href: '/categories/home-furniture' },
-            { label: 'Kitchen',     href: '/categories/home-kitchen' },
-            { label: 'Bedding',     href: '/categories/home-bedding' },
-            { label: 'Decor',       href: '/categories/home-decor' },
-        ],
-    },
-];
 
 function CartIcon() {
     const { open, totals } = useCartStore();
@@ -85,7 +40,8 @@ function CartIcon() {
 }
 
 export default function Navbar({ transparent = false }: { transparent?: boolean }) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, nav_categories } = usePage<PageProps>().props;
+    const navCats: NavCategory[] = nav_categories ?? [];
     const [mobileOpen, setMobileOpen] = useState(false);
     const [megaOpen, setMegaOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -146,34 +102,47 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
                                             animate={{ opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.32, 0.72, 0, 1] } }}
                                             exit={{ opacity: 0, y: -6, transition: { duration: 0.12 } }}
                                         >
-                                            <div className="w-[680px] rounded-2xl border border-ink-200 bg-surface p-6 shadow-lg">
-                                                <div className="grid grid-cols-4 gap-6">
-                                                    {shopMegaMenu.map((col) => (
-                                                        <div key={col.heading}>
-                                                            <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-widest text-ink-400">
-                                                                {col.heading}
-                                                            </h3>
-                                                            <ul className="space-y-1.5">
-                                                                {col.links.map((link) => (
-                                                                    <li key={link.href}>
-                                                                        <Link
-                                                                            href={link.href}
-                                                                            className="text-sm text-ink-600 transition-colors hover:text-ink-950"
-                                                                        >
-                                                                            {link.label}
-                                                                        </Link>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-lg"
+                                                style={{ width: Math.max(320, navCats.length * 160) + 'px', maxWidth: '800px' }}>
+                                                {navCats.length === 0 ? (
+                                                    <p className="text-sm text-ink-400">No categories configured yet.</p>
+                                                ) : (
+                                                    <div
+                                                        className="grid gap-6"
+                                                        style={{ gridTemplateColumns: `repeat(${Math.min(navCats.length, 4)}, minmax(0, 1fr))` }}
+                                                    >
+                                                        {navCats.map((cat) => (
+                                                            <div key={cat.id}>
+                                                                <Link
+                                                                    href={route('categories.show', cat.slug)}
+                                                                    className="mb-2.5 block text-xs font-semibold uppercase tracking-widest text-ink-800 hover:text-brand"
+                                                                >
+                                                                    {cat.name}
+                                                                </Link>
+                                                                {cat.children.length > 0 && (
+                                                                    <ul className="space-y-1.5">
+                                                                        {cat.children.map((child) => (
+                                                                            <li key={child.id}>
+                                                                                <Link
+                                                                                    href={route('categories.show', child.slug)}
+                                                                                    className="text-sm text-ink-500 transition-colors hover:text-ink-950"
+                                                                                >
+                                                                                    {child.name}
+                                                                                </Link>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 <div className="mt-5 border-t border-ink-100 pt-4 flex gap-4">
-                                                    <Link href="/products?sort=newest" className="text-sm font-medium text-ink-900 hover:text-brand-500">
+                                                    <Link href={route('products.index') + '?sort=newest'} className="text-sm font-medium text-ink-900 hover:text-brand">
                                                         New Arrivals →
                                                     </Link>
-                                                    <Link href="/products?tag=sale" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-                                                        Sale →
+                                                    <Link href={route('products.index')} className="text-sm font-medium text-brand hover:text-brand/80">
+                                                        All Products →
                                                     </Link>
                                                 </div>
                                             </div>
@@ -239,7 +208,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
 
                             <div className="hidden lg:block">
                                 {auth.user ? (
-                                    <Link href="/profile" className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-xs font-bold text-white">
+                                    <Link href="/account" className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-xs font-bold text-white" title={auth.user.name}>
                                         {auth.user.name.charAt(0).toUpperCase()}
                                     </Link>
                                 ) : (

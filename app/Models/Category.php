@@ -14,7 +14,7 @@ class Category extends Model
 
     protected $fillable = [
         'parent_id', 'name', 'slug', 'description',
-        'image_path', 'sort_order', 'is_active',
+        'image_path', 'sort_order', 'is_active', 'is_nav_featured',
     ];
 
     protected function casts(): array

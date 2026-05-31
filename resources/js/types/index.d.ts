@@ -21,4 +21,13 @@ export type PageProps<
         error?: string;
     };
     cart_count: number;
+    nav_categories: NavCategory[];
 };
+
+export interface NavCategory {
+    id: number;
+    name: string;
+    slug: string;
+    image_url: string | null;
+    children: { id: number; name: string; slug: string }[];
+}

@@ -8,7 +8,7 @@ import type { PageProps } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 
 interface Category { id: number; name: string }
-interface EditCategory { id: number; name: string; slug: string; description: string | null; parent_id: number | null; sort_order: number; is_active: boolean; image_url: string | null }
+interface EditCategory { id: number; name: string; slug: string; description: string | null; parent_id: number | null; sort_order: number; is_active: boolean; is_nav_featured: boolean; image_url: string | null }
 
 interface Props extends PageProps {
     category?: EditCategory;
@@ -24,8 +24,9 @@ export default function AdminCategoryForm({ category, parents }: Props) {
         parent_id:   category?.parent_id?.toString() ?? '',
         description: category?.description ?? '',
         sort_order:  category?.sort_order ?? 0,
-        is_active:   category?.is_active ?? true,
-        image:       null as File | null,
+        is_active:       category?.is_active ?? true,
+        is_nav_featured: category?.is_nav_featured ?? false,
+        image:           null as File | null,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -93,6 +94,13 @@ export default function AdminCategoryForm({ category, parents }: Props) {
                             description="Active categories are visible to shoppers."
                             checked={data.is_active}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('is_active', e.target.checked)}
+                        />
+
+                        <Checkbox
+                            label="Show in navigation"
+                            description="Featured in the header Shop mega-menu. Root categories only."
+                            checked={data.is_nav_featured}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setData('is_nav_featured', e.target.checked)}
                         />
 
                         <div className="flex gap-3 pt-2">

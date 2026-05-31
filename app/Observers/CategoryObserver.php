@@ -25,6 +25,7 @@ class CategoryObserver
     {
         Cache::forget('categories.tree');
         Cache::forget('categories.hero');
+        Cache::forget('categories.nav');
         Cache::forget('homepage.featured');
         Cache::forget('homepage.bestsellers');
     }
