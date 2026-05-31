@@ -52,7 +52,7 @@ return [
         // this disk. Switch MEDIA_DISK=s3 in production without touching
         // application code — Storage::disk('media') always resolves correctly.
         'media' => [
-            'driver'     => env('MEDIA_DRIVER', 'public'),
+            'driver'     => env('MEDIA_DRIVER', 'local'),
             'root'       => storage_path('app/public/media'),
             'url'        => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/media',
             'visibility' => 'public',

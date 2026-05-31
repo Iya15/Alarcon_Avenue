@@ -27,7 +27,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/');
+        $user = $request->user();
+
+        // Redirect staff/admin to the admin panel; everyone else to the homepage
+        $intended = $user->hasAnyRole(['admin', 'staff'])
+            ? route('admin.dashboard')
+            : '/';
+
+        return redirect()->intended($intended);
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -287,7 +287,6 @@ function SubmitForm({ productId, productSlug, onSuccess }: { productId: number; 
         data.photos.forEach((f, i) => formData.append(`photos[${i}]`, f));
 
         post(route('reviews.store', productSlug), {
-            data: formData,
             forceFormData: true,
             onSuccess: () => { reset(); onSuccess(); },
         });
