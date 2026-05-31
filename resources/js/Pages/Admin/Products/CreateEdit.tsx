@@ -7,8 +7,8 @@ import Modal from '@/Components/ui/Modal';
 import Select from '@/Components/ui/Select';
 import AdminLayout from '@/Components/layout/AdminLayout';
 import type { PageProps } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Category { id: number; name: string }
 interface AttrValue { id: number; value: string; display_value: string; attribute_id: number }
@@ -36,8 +36,23 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
     const isEditing = !!product;
     const [addVariantOpen, setAddVariantOpen] = useState(false);
     const [uploadOpen, setUploadOpen] = useState(false);
+    const { flash } = usePage<PageProps>().props;
+    const imagesRef = useRef<HTMLDivElement>(null);
 
-    const { data, setData, post, put, processing, errors } = useForm({
+    // After creating a product, scroll to the images section automatically
+    useEffect(() => {
+        if (flash?.success && isEditing && imagesRef.current) {
+            setTimeout(() => imagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
+    }, []); // eslint-disable-line
+
+    const { data, setData, post, put, processing, errors } = useForm<{
+        name: string; slug: string; description: string; short_description: string;
+        base_price_cents: number; compare_at_price_cents: number | string;
+        cost_price_cents: number | string; status: string; is_featured: boolean;
+        meta_title: string; meta_description: string; category_ids: number[];
+        images: File[];
+    }>({
         name:                   product?.name ?? '',
         slug:                   product?.slug ?? '',
         description:            product?.description ?? '',
@@ -49,13 +64,30 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
         is_featured:            product?.is_featured ?? false,
         meta_title:             product?.meta_title ?? '',
         meta_description:       product?.meta_description ?? '',
-        category_ids:           product?.categories.map(c => c.id) ?? [],
+        category_ids:           product?.categories?.map((c: { id: number }) => c.id) ?? [],
+        images:                 [],
     });
+
+    // Preview URLs for selected files (create form only)
+    const [previews, setPreviews] = useState<string[]>([]);
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        setData('images', files);
+        setPreviews(files.map((f) => URL.createObjectURL(f)));
+    };
+
+    const [formErrors, setFormErrors] = useState<string[]>([]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        const errs: string[] = [];
+        if (!data.name.trim()) errs.push('Product name is required.');
+        if (data.base_price_cents <= 0) errs.push('Base price must be greater than ₱0.');
+        if (errs.length) { setFormErrors(errs); return; }
+        setFormErrors([]);
         if (isEditing) put(route('admin.products.update', product!.id));
-        else post(route('admin.products.store'));
+        else post(route('admin.products.store'), { forceFormData: true });
     };
 
     const destroyImage = (imageId: number) => {
@@ -76,6 +108,15 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                     </h1>
                 </div>
 
+                {flash?.success && (
+                    <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                        <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {flash.success}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <form onSubmit={submit} className="lg:col-span-2 space-y-4">
                         <Card bordered>
@@ -85,7 +126,7 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                                 <Input label="Slug" value={data.slug} onChange={(e) => setData('slug', e.target.value)} hint="Auto-generated if blank." error={errors.slug} />
                                 <div>
                                     <label className="text-sm font-medium text-ink-800">Description</label>
-                                    <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={6} className="mt-1.5 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                    <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={6} className="mt-1.5 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
                                 </div>
                                 <Input label="Short description" value={data.short_description} onChange={(e) => setData('short_description', e.target.value)} hint="Shown on listing cards." error={errors.short_description} />
                             </div>
@@ -108,8 +149,17 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                             </div>
                         </Card>
 
+                        {formErrors.length > 0 && (
+                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                                <p className="mb-1 text-sm font-medium text-red-700">Please fix the following:</p>
+                                <ul className="list-inside list-disc space-y-0.5 text-sm text-red-600">
+                                    {formErrors.map((e) => <li key={e}>{e}</li>)}
+                                </ul>
+                            </div>
+                        )}
+
                         <div className="flex gap-3">
-                            <Button type="submit" loading={processing}>{isEditing ? 'Save' : 'Create product'}</Button>
+                            <Button type="submit" loading={processing}>{isEditing ? 'Save changes' : 'Create product'}</Button>
                             <Button variant="secondary" href={route('admin.products.index')}>Cancel</Button>
                         </div>
                     </form>
@@ -148,19 +198,78 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                     </div>
                 </div>
 
+                {/* Inline image upload — available on the create form before saving */}
+                {!isEditing && (
+                    <div className="mt-6">
+                        <Card bordered>
+                            <h2 className="mb-3 font-semibold text-ink-900">Product Images</h2>
+                            <p className="mb-4 text-sm text-ink-500">
+                                Select images to upload with this product. Accepted: JPG, PNG, WebP, AVIF — max 8 MB each.
+                            </p>
+
+                            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink-200 bg-ink-50 py-8 text-center transition hover:border-brand hover:bg-brand/5">
+                                <svg className="h-8 w-8 text-ink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                                <span className="text-sm font-medium text-ink-600">Click to select images</span>
+                                <span className="text-xs text-ink-400">or drag and drop</span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".jpg,.jpeg,.png,.webp,.avif"
+                                    className="sr-only"
+                                    onChange={handleImageSelect}
+                                />
+                            </label>
+
+                            {previews.length > 0 && (
+                                <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6">
+                                    {previews.map((src, i) => (
+                                        <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-ink-200">
+                                            <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newFiles = data.images.filter((_, j) => j !== i);
+                                                    setData('images', newFiles);
+                                                    setPreviews((p) => p.filter((_, j) => j !== i));
+                                                }}
+                                                className="absolute inset-0 hidden items-center justify-center bg-black/50 group-hover:flex"
+                                            >
+                                                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                            {i === 0 && (
+                                                <span className="absolute left-1 top-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-semibold text-white">Primary</span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {data.images.length > 0 && (
+                                <p className="mt-3 text-xs text-ink-500">
+                                    {data.images.length} image{data.images.length !== 1 ? 's' : ''} selected. First image will be set as primary.
+                                </p>
+                            )}
+                        </Card>
+                    </div>
+                )}
+
                 {/* Images section — only shown when editing */}
                 {isEditing && (
-                    <div className="mt-6">
+                    <div className="mt-6" ref={imagesRef}>
                         <Card bordered>
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="font-semibold text-ink-900">Images</h2>
                                 <Button size="sm" variant="secondary" onClick={() => setUploadOpen(true)}>Upload images</Button>
                             </div>
-                            {product!.images.length === 0 ? (
+                            {(product?.images ?? []).length === 0 ? (
                                 <p className="text-sm text-ink-500">No images yet. Upload at least one image.</p>
                             ) : (
                                 <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
-                                    {product!.images.map((img) => (
+                                    {(product?.images ?? []).map((img) => (
                                         <div key={img.id} className="group relative">
                                             <div className={`aspect-square overflow-hidden rounded-lg border-2 ${img.is_primary ? 'border-brand-500' : 'border-transparent'}`}>
                                                 <img src={img.url} alt="" className="h-full w-full object-cover" />
@@ -203,7 +312,7 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-ink-100">
-                                    {product!.variants.map((v) => (
+                                    {(product?.variants ?? []).map((v) => (
                                         <tr key={v.id}>
                                             <td className="py-2 font-mono text-xs text-ink-700">{v.sku}</td>
                                             <td className="py-2">
@@ -261,7 +370,7 @@ function UploadModal({ open, onClose, productId }: { open: boolean; onClose: () 
             <form id="upload-form" onSubmit={submit} className="space-y-3">
                 <div>
                     <label className="text-sm font-medium text-ink-800">Images</label>
-                    <input ref={fileRef} type="file" multiple accept="image/*" className="mt-1.5 block text-sm text-ink-600" />
+                    <input ref={fileRef} type="file" multiple accept=".jpg,.jpeg,.png,.webp,.avif" className="mt-1.5 block text-sm text-ink-600" />
                 </div>
                 <Input label="Alt text" value={altText} onChange={(e) => setAltText(e.target.value)} hint="Shared for all uploaded images" />
             </form>

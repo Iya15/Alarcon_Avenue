@@ -14,6 +14,7 @@ use App\Models\Brand;
 use App\Models\Coupon;
 use App\Observers\AdminAuditObserver;
 use App\Observers\CategoryObserver;
+use App\Observers\ProductObserver;
 use App\Observers\ReviewObserver;
 use App\Policies\CouponPolicy;
 use App\Services\Payment\PaymentGatewayManager;
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
 
         Review::observe(ReviewObserver::class);
         Category::observe(CategoryObserver::class);
+        Product::observe(ProductObserver::class);
 
         // Audit trail for admin-managed models
         foreach ([Product::class, Category::class, Order::class, Coupon::class, User::class] as $model) {

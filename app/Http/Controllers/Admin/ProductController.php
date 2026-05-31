@@ -52,12 +52,22 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(StoreProductRequest $request, CreateProductAction $action): RedirectResponse
-    {
+    public function store(
+        StoreProductRequest      $request,
+        CreateProductAction      $action,
+        UploadProductImageAction $uploadAction,
+    ): RedirectResponse {
         $product = $action->execute($request->validated());
 
-        return redirect()->route('admin.products.edit', $product)
-            ->with('success', 'Product created. Add images and variants below.');
+        if ($request->hasFile('images')) {
+            $uploadAction->execute($product, $request->file('images'));
+        }
+
+        $message = $request->hasFile('images')
+            ? 'Product created with images. Add variants below.'
+            : 'Product created. Add images and variants below.';
+
+        return redirect()->route('admin.products.edit', $product)->with('success', $message);
     }
 
     public function edit(Product $product): Response
@@ -65,7 +75,7 @@ class ProductController extends Controller
         $product->load(['categories', 'images', 'variants.attributeValues', 'variants.inventory']);
 
         return Inertia::render('Admin/Products/CreateEdit', [
-            'product'    => new ProductResource($product),
+            'product'    => (new ProductResource($product))->resolve(),
             'categories' => CategoryResource::collection(Category::orderBy('name')->get()),
             'attributes' => AttributeResource::collection(Attribute::with('values')->get()),
         ]);
