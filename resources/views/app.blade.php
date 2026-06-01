@@ -6,6 +6,9 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Apply stored theme before first paint to avoid flash -->
+        <script>try{document.documentElement.setAttribute('data-theme',JSON.parse(localStorage.getItem('aa-theme')||'{}').state?.theme||'light')}catch(e){}</script>
+
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 

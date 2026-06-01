@@ -126,7 +126,7 @@ export default function AdminProductForm({ product, categories, attributes }: Pr
                                 <Input label="Slug" value={data.slug} onChange={(e) => setData('slug', e.target.value)} hint="Auto-generated if blank." error={errors.slug} />
                                 <div>
                                     <label className="text-sm font-medium text-ink-800">Description</label>
-                                    <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={6} className="mt-1.5 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                    <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={6} className="mt-1.5 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500" />
                                 </div>
                                 <Input label="Short description" value={data.short_description} onChange={(e) => setData('short_description', e.target.value)} hint="Shown on listing cards." error={errors.short_description} />
                             </div>

@@ -1,7 +1,7 @@
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
 import { cn } from '@/lib/cn';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { type ReactNode } from 'react';
 
 const NAV = [
@@ -48,6 +48,16 @@ export default function AccountLayout({ children, title }: { children: ReactNode
                             <nav className="space-y-0.5">
                                 {NAV.map((n) => <NavItem key={n.href} {...n} />)}
                             </nav>
+                            <div className="mt-3 border-t border-ink-100 pt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => router.post(route('logout'))}
+                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                                >
+                                    <span className="text-base leading-none">🚪</span>
+                                    Log out
+                                </button>
+                            </div>
                         </div>
                     </aside>
 
@@ -63,7 +73,7 @@ export default function AccountLayout({ children, title }: { children: ReactNode
                                     className={cn(
                                         'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap',
                                         active
-                                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                            ? 'border-brand bg-brand/10 text-brand-700'
                                             : 'border-ink-200 text-ink-600 hover:border-ink-300',
                                     )}
                                 >
@@ -71,6 +81,13 @@ export default function AccountLayout({ children, title }: { children: ReactNode
                                 </Link>
                             );
                         })}
+                        <button
+                            type="button"
+                            onClick={() => router.post(route('logout'))}
+                            className="shrink-0 rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors whitespace-nowrap hover:bg-red-50"
+                        >
+                            Log out
+                        </button>
                     </div>
 
                     {/* ── Main content ───────────────────────────────────── */}

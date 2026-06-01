@@ -61,11 +61,11 @@ export default function OrderTransactions({ order, payments }: Props) {
             </div>
 
             {payments.length === 0 ? (
-                <div className="rounded-xl border border-ink-200 bg-white p-8 text-center text-sm text-ink-500">
+                <div className="rounded-xl border border-ink-200 bg-surface p-8 text-center text-sm text-ink-500">
                     No payment transactions recorded for this order.
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-xl border border-ink-200 bg-white">
+                <div className="overflow-hidden rounded-xl border border-ink-200 bg-surface">
                     <table className="w-full text-sm">
                         <thead className="border-b border-ink-200 bg-ink-50">
                             <tr>

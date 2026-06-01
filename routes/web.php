@@ -85,7 +85,8 @@ Route::middleware(['auth', 'verified'])
         Route::get('/orders/{order}',    [AccountOrderController::class, 'show'])->name('orders.show');
 
         // Wishlist
-        Route::get('/wishlist',          [AccountWishlistController::class, 'index'])->name('wishlist');
+        Route::get('/wishlist',           [AccountWishlistController::class, 'index'])->name('wishlist');
+        Route::post('/wishlist',          [AccountWishlistController::class, 'store'])->name('wishlist.store');
         Route::delete('/wishlist/{wishlistItem}', [AccountWishlistController::class, 'destroy'])->name('wishlist.destroy');
 
         // Addresses

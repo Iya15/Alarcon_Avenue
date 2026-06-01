@@ -1,5 +1,6 @@
 import { cn } from '@/lib/cn';
 import SearchInput from '@/Components/search/SearchInput';
+import ThemeToggle from '@/Components/ui/ThemeToggle';
 import { useCartStore } from '@/stores/cartStore';
 import { type NavCategory, type PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -161,39 +162,40 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
 
                         {/* Right actions */}
                         <div className="flex items-center gap-1">
-                            {/* Desktop: inline search bar expands */}
-                            <AnimatePresence mode="popLayout">
-                                {searchOpen ? (
-                                    <motion.div
-                                        key="search-bar"
-                                        className="hidden lg:block"
-                                        initial={{ width: 0, opacity: 0 }}
-                                        animate={{ width: 280, opacity: 1, transition: { duration: 0.2 } }}
-                                        exit={{ width: 0, opacity: 0, transition: { duration: 0.15 } }}
-                                    >
-                                        <SearchInput
-                                            autoFocus
-                                            placeholder="Search…"
-                                            onClose={() => setSearchOpen(false)}
-                                        />
-                                    </motion.div>
-                                ) : (
-                                    <motion.button
-                                        key="search-icon"
-                                        className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                                        aria-label="Search"
-                                        onClick={() => setSearchOpen(true)}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                    >
-                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                                        </svg>
-                                    </motion.button>
-                                )}
-                            </AnimatePresence>
-                            {/* Mobile: navigate to search page */}
+                            {/* Desktop only: inline search bar expands on click */}
+                            <div className="hidden lg:flex">
+                                <AnimatePresence mode="popLayout">
+                                    {searchOpen ? (
+                                        <motion.div
+                                            key="search-bar"
+                                            initial={{ width: 0, opacity: 0 }}
+                                            animate={{ width: 280, opacity: 1, transition: { duration: 0.2 } }}
+                                            exit={{ width: 0, opacity: 0, transition: { duration: 0.15 } }}
+                                        >
+                                            <SearchInput
+                                                autoFocus
+                                                placeholder="Search…"
+                                                onClose={() => setSearchOpen(false)}
+                                            />
+                                        </motion.div>
+                                    ) : (
+                                        <motion.button
+                                            key="search-icon"
+                                            className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                            aria-label="Search"
+                                            onClick={() => setSearchOpen(true)}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                        >
+                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                            </svg>
+                                        </motion.button>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                            {/* Mobile only: icon navigates directly to /search */}
                             <Link
                                 href="/search"
                                 className="rounded-lg p-2 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 lg:hidden"
@@ -203,6 +205,8 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                                 </svg>
                             </Link>
+
+                            <ThemeToggle />
 
                             <CartIcon />
 

@@ -87,7 +87,7 @@ export default function CartSummary({ showCoupon = true, showCheckout = true, co
 
             {showCheckout && items.length > 0 && (
                 <Button
-                    href={route('cart.show')}
+                    href={route('checkout.index')}
                     variant="primary"
                     size="lg"
                     fullWidth

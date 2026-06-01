@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Wishlist;
 use App\Models\WishlistItem;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -43,6 +45,39 @@ class WishlistController extends Controller
             'items'      => $items,
             'wishlistId' => $wishlists->first()?->id,
         ]);
+    }
+
+    /**
+     * Toggle a product in/out of the user's default wishlist.
+     * Returns JSON so the button can update its state without a page reload.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate(['product_id' => ['required', 'integer', 'exists:products,id']]);
+
+        $user = $request->user();
+
+        // Ensure the user has a wishlist (created on registration, but guard here too)
+        $wishlist = $user->wishlists()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => 'My Wishlist', 'is_public' => false]
+        );
+
+        $existing = WishlistItem::where('wishlist_id', $wishlist->id)
+            ->where('product_id', $request->integer('product_id'))
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            return response()->json(['wishlisted' => false]);
+        }
+
+        WishlistItem::create([
+            'wishlist_id' => $wishlist->id,
+            'product_id'  => $request->integer('product_id'),
+        ]);
+
+        return response()->json(['wishlisted' => true]);
     }
 
     public function destroy(Request $request, WishlistItem $wishlistItem): RedirectResponse

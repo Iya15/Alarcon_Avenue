@@ -2,6 +2,7 @@ import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Card from '@/Components/ui/Card';
 import AddToCartButton from '@/Components/cart/AddToCartButton';
+import WishlistButton from '@/Components/wishlist/WishlistButton';
 import Container from '@/Components/layout/Container';
 import PageLayout from '@/Components/layout/PageLayout';
 import SeoHead from '@/Components/layout/SeoHead';
@@ -442,6 +443,8 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                 size="lg"
                                 fullWidth={false}
                             />
+
+                            <WishlistButton productId={product.id} variant="icon" />
                         </div>
 
                         <p className="text-xs text-ink-400">

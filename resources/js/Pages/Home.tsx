@@ -95,8 +95,8 @@ export default function Home({ auth, featured, bestsellers, personalized, topCat
                 description="Alarcon Avenue — curated multi-category e-commerce. Browse fashion, electronics, home & more with free shipping on qualifying orders."
             />
 
-            {/* Hero */}
-            <section className="bg-ink-900 py-16 lg:py-24">
+            {/* Hero — always dark regardless of site theme, so force light-mode ink values */}
+            <section data-theme="light" className="bg-ink-900 py-16 lg:py-24">
                 <Container>
                     <div className="max-w-2xl">
                         <h1 className="text-4xl font-extrabold tracking-tight text-white lg:text-5xl">

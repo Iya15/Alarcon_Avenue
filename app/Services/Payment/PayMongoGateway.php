@@ -21,9 +21,17 @@ class PayMongoGateway implements PaymentGateway
 
     private function http(): PendingRequest
     {
-        return Http::withBasicAuth(config('services.paymongo.secret_key'), '')
+        $client = Http::withBasicAuth(config('services.paymongo.secret_key'), '')
             ->acceptJson()
             ->asJson();
+
+        // cURL error 60 on Windows: CA bundle not configured in php.ini.
+        // Disable SSL verification ONLY in local dev — never in production.
+        if (app()->isLocal() && ! is_file(ini_get('curl.cainfo') ?: '')) {
+            $client = $client->withoutVerifying();
+        }
+
+        return $client;
     }
 
     public function initiate(Order $order): PaymentSession

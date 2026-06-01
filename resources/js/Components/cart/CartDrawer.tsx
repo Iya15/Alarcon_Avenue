@@ -24,8 +24,8 @@ export default function CartDrawer() {
                 !isEmpty ? (
                     <div className="space-y-3">
                         <CartSummary showCoupon={false} showCheckout={false} compact />
-                        <Button href={route('cart.show')} variant="primary" size="lg" fullWidth onClick={close}>
-                            View Cart & Checkout
+                        <Button href={route('checkout.index')} variant="primary" size="lg" fullWidth onClick={close}>
+                            Checkout
                         </Button>
                     </div>
                 ) : null
