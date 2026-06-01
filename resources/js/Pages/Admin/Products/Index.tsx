@@ -46,7 +46,7 @@ export default function AdminProductsIndex({ products, filters }: Props) {
         <AdminLayout title="Products">
             <Head title="Products — Admin" />
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-lg font-bold text-white">Products ({products.meta.total})</h1>
+                    <h1 className="text-lg font-bold text-ink-900">Products ({products.meta.total})</h1>
                     <Button href={route('admin.products.create')}>Add product</Button>
                 </div>
 

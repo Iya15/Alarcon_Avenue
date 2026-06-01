@@ -116,10 +116,10 @@ export default function ChatWidget() {
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="fixed bottom-20 right-5 z-50 flex h-13 w-13 items-center justify-center rounded-full bg-brand shadow-lg transition hover:bg-brand/90 lg:bottom-6"
+                className="fixed bottom-20 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-brand shadow-lg transition hover:bg-brand/90 lg:bottom-6"
                 aria-label="Open shopping assistant"
             >
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
             </button>
@@ -132,7 +132,8 @@ export default function ChatWidget() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.97 }}
                         transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-                        className="fixed bottom-36 right-5 z-50 flex w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 lg:bottom-22"
+                        data-theme="light"
+                    className="fixed bottom-36 right-5 z-50 flex w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 lg:bottom-22"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between bg-ink-900 px-4 py-3">

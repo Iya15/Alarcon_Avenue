@@ -1,7 +1,7 @@
 import AdminLayout from '@/Components/layout/AdminLayout';
 import { ThemedAreaChart, ThemedBarChart } from '@/Components/admin/Chart';
 import type { PageProps } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Summary {
@@ -39,9 +39,9 @@ function formatPHP(cents: number) {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
     return (
-        <div className="rounded-xl bg-ink-900 border border-ink-800 p-5">
-            <p className="text-xs font-medium text-ink-400 uppercase tracking-wider">{label}</p>
-            <p className="mt-1.5 text-2xl font-bold text-white">{value}</p>
+        <div className="rounded-xl bg-surface border border-ink-200 p-5">
+            <p className="text-xs font-medium text-ink-500 uppercase tracking-wider">{label}</p>
+            <p className="mt-1.5 text-2xl font-bold text-ink-900">{value}</p>
             {sub && <p className="mt-1 text-xs text-ink-500">{sub}</p>}
         </div>
     );
@@ -49,8 +49,8 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="rounded-xl bg-ink-900 border border-ink-800 p-5">
-            <h3 className="mb-4 text-sm font-semibold text-white">{title}</h3>
+        <div className="rounded-xl bg-surface border border-ink-200 p-5">
+            <h3 className="mb-4 text-sm font-semibold text-ink-900">{title}</h3>
             {children}
         </div>
     );
@@ -82,7 +82,7 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
 
             {/* Preset picker */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white">Analytics</h2>
+                <h2 className="text-lg font-semibold text-ink-900">Analytics</h2>
                 <div className="flex gap-1.5">
                     {PRESETS.map((p) => (
                         <button
@@ -91,7 +91,7 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
                             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                                 preset === p.value
                                     ? 'bg-[#e7901d] text-white'
-                                    : 'bg-ink-800 text-ink-300 hover:bg-ink-700'
+                                    : 'bg-ink-100 text-ink-700 hover:bg-ink-200'
                             }`}
                         >
                             {p.label}
@@ -139,9 +139,9 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
                 </ChartCard>
 
                 {/* Top products */}
-                <div className="rounded-xl bg-ink-900 border border-ink-800 p-5">
+                <div className="rounded-xl bg-surface border border-ink-200 p-5">
                     <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">Top Products</h3>
+                        <h3 className="text-sm font-semibold text-ink-900">Top Products</h3>
                         <a
                             href={route('admin.analytics.export.products', { preset })}
                             className="text-xs text-[#e7901d] hover:underline"
@@ -155,7 +155,7 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
                             <div key={p.product_id} className="flex items-center gap-3">
                                 <span className="w-5 text-xs text-ink-500">{i + 1}</span>
                                 <div className="flex-1 min-w-0">
-                                    <p className="truncate text-xs font-medium text-white">{p.product_name}</p>
+                                    <p className="truncate text-xs font-medium text-ink-900">{p.product_name}</p>
                                     <p className="text-xs text-ink-500">{p.total_units} units</p>
                                 </div>
                                 <span className="text-xs font-semibold text-[#e7901d]">{formatPHP(p.total_revenue)}</span>
@@ -164,7 +164,7 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
                     </div>
                     <a
                         href={route('admin.analytics.export.sales', { preset })}
-                        className="mt-4 block text-xs text-ink-400 hover:text-white"
+                        className="mt-4 block text-xs text-ink-400 hover:text-ink-900"
                     >
                         Export sales CSV →
                     </a>

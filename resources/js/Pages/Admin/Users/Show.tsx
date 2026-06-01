@@ -27,23 +27,23 @@ export default function AdminUserShow({ user, roles }: Props) {
             <Head title={`${user.name} — Admin`} />
 
             <div className="mb-5">
-                <button onClick={() => router.get(route('admin.users.index'))} className="text-xs text-ink-400 hover:text-white">← Users</button>
+                <button onClick={() => router.get(route('admin.users.index'))} className="text-xs text-ink-400 hover:text-ink-900">← Users</button>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
-                <div className="rounded-xl border border-ink-800 bg-ink-900 p-5">
-                    <h3 className="mb-3 text-sm font-semibold text-white">Profile</h3>
+                <div className="rounded-xl border border-ink-200 bg-surface p-5">
+                    <h3 className="mb-3 text-sm font-semibold text-ink-900">Profile</h3>
                     <dl className="space-y-2 text-xs">
                         {[['Name', user.name], ['Email', user.email], ['Phone', user.phone ?? '—'], ['Joined', new Date(user.created_at).toLocaleDateString('en-PH')], ['Email verified', user.email_verified_at ? '✓' : '✗']].map(([k, v]) => (
                             <div key={k} className="flex justify-between gap-3">
-                                <dt className="text-ink-400">{k}</dt>
-                                <dd className="text-white text-right">{v}</dd>
+                                <dt className="text-ink-500">{k}</dt>
+                                <dd className="text-ink-900 text-right">{v}</dd>
                             </div>
                         ))}
                         <div className="flex justify-between gap-3">
-                            <dt className="text-ink-400">Status</dt>
+                            <dt className="text-ink-500">Status</dt>
                             <dd>
-                                <button onClick={toggleActive} className={`text-xs font-medium underline ${user.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                                <button onClick={toggleActive} className={`text-xs font-medium underline ${user.is_active ? 'text-green-600' : 'text-red-600'}`}>
                                     {user.is_active ? 'Active (deactivate)' : 'Inactive (activate)'}
                                 </button>
                             </dd>
@@ -51,12 +51,12 @@ export default function AdminUserShow({ user, roles }: Props) {
                     </dl>
                 </div>
 
-                <div className="rounded-xl border border-ink-800 bg-ink-900 p-5 lg:col-span-2">
-                    <h3 className="mb-3 text-sm font-semibold text-white">Roles</h3>
+                <div className="rounded-xl border border-ink-200 bg-surface p-5 lg:col-span-2">
+                    <h3 className="mb-3 text-sm font-semibold text-ink-900">Roles</h3>
                     <form onSubmit={submitRoles} className="space-y-3">
                         <div className="flex flex-wrap gap-2">
                             {roles.map((r) => (
-                                <label key={r} className="flex cursor-pointer items-center gap-2 rounded-lg border border-ink-700 px-3 py-2 text-xs text-ink-200 hover:border-[#e7901d]">
+                                <label key={r} className="flex cursor-pointer items-center gap-2 rounded-lg border border-ink-200 px-3 py-2 text-xs text-ink-700 hover:border-[#e7901d]">
                                     <input
                                         type="checkbox"
                                         checked={roleForm.data.roles.includes(r)}

@@ -24,22 +24,22 @@ export default function AdminRolesIndex({ roles, permissions }: Props) {
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Role list */}
                 <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-white">Roles</h3>
+                    <h3 className="text-sm font-semibold text-ink-900">Roles</h3>
                     {roles.map((r) => (
-                        <div key={r.id} className="rounded-xl border border-ink-800 bg-ink-900 p-4">
+                        <div key={r.id} className="rounded-xl border border-ink-200 bg-surface p-4">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-white">{r.name}</p>
+                                    <p className="text-sm font-semibold text-ink-900">{r.name}</p>
                                     <p className="text-xs text-ink-400">{r.users_count} user{r.users_count !== 1 ? 's' : ''}</p>
                                 </div>
                                 {!['admin', 'staff', 'customer'].includes(r.name) && (
-                                    <button onClick={() => destroy(r.id, r.name)} className="text-xs text-red-400 hover:underline">Delete</button>
+                                    <button onClick={() => destroy(r.id, r.name)} className="text-xs text-red-500 hover:underline">Delete</button>
                                 )}
                             </div>
                             {r.permissions.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1">
                                     {r.permissions.map((p) => (
-                                        <span key={p} className="rounded bg-ink-800 px-1.5 py-0.5 text-xs text-ink-300">{p}</span>
+                                        <span key={p} className="rounded bg-ink-100 px-1.5 py-0.5 text-xs text-ink-700">{p}</span>
                                     ))}
                                 </div>
                             )}
@@ -49,24 +49,24 @@ export default function AdminRolesIndex({ roles, permissions }: Props) {
 
                 {/* Create role */}
                 <div>
-                    <h3 className="mb-3 text-sm font-semibold text-white">Create Role</h3>
-                    <form onSubmit={submitCreate} className="rounded-xl border border-ink-800 bg-ink-900 p-5 space-y-4">
+                    <h3 className="mb-3 text-sm font-semibold text-ink-900">Create Role</h3>
+                    <form onSubmit={submitCreate} className="rounded-xl border border-ink-200 bg-surface p-5 space-y-4">
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-ink-300">Role name</label>
+                            <label className="mb-1 block text-xs font-medium text-ink-600">Role name</label>
                             <input
                                 value={createForm.data.name}
                                 onChange={(e) => createForm.setData('name', e.target.value)}
                                 placeholder="vendor"
-                                className="w-full rounded-lg bg-ink-800 border border-ink-700 px-3 py-2 text-sm text-white focus:border-[#e7901d] focus:outline-none"
+                                className="w-full rounded-lg bg-surface border border-ink-200 px-3 py-2 text-sm text-ink-900 focus:border-[#e7901d] focus:outline-none"
                             />
-                            {createForm.errors.name && <p className="mt-1 text-xs text-red-400">{createForm.errors.name}</p>}
+                            {createForm.errors.name && <p className="mt-1 text-xs text-red-500">{createForm.errors.name}</p>}
                         </div>
                         {permissions.length > 0 && (
                             <div>
-                                <label className="mb-2 block text-xs font-medium text-ink-300">Permissions</label>
+                                <label className="mb-2 block text-xs font-medium text-ink-600">Permissions</label>
                                 <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                                     {permissions.map((p) => (
-                                        <label key={p} className="flex items-center gap-1.5 text-xs text-ink-200 cursor-pointer">
+                                        <label key={p} className="flex items-center gap-1.5 text-xs text-ink-700 cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 checked={createForm.data.permissions.includes(p)}

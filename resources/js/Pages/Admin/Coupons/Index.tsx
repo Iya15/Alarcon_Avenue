@@ -39,38 +39,38 @@ export default function AdminCouponsIndex({ coupons, filters }: Props) {
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <form onSubmit={applySearch} className="flex gap-2">
                     <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Code…"
-                        className="rounded-lg bg-ink-800 border border-ink-700 px-3 py-1.5 text-sm text-white placeholder-ink-500 focus:border-[#e7901d] focus:outline-none w-40" />
-                    <button type="submit" className="rounded-lg bg-ink-700 px-3 py-1.5 text-sm text-white hover:bg-ink-600">Search</button>
+                        className="rounded-lg bg-surface border border-ink-200 px-3 py-1.5 text-sm text-ink-900 placeholder-ink-400 focus:border-[#e7901d] focus:outline-none w-40" />
+                    <button type="submit" className="rounded-lg bg-ink-900 px-3 py-1.5 text-sm text-ink-50 hover:bg-ink-800">Search</button>
                 </form>
                 <Link href={route('admin.coupons.create')} className="rounded-lg bg-[#e7901d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c97a18]">
                     Add coupon
                 </Link>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-ink-800 bg-ink-900">
+            <div className="overflow-hidden rounded-xl border border-ink-200 bg-surface">
                 <table className="w-full text-sm">
-                    <thead className="border-b border-ink-800 bg-ink-950">
+                    <thead className="border-b border-ink-200 bg-canvas">
                         <tr>
                             {['Code', 'Discount', 'Used / Max', 'Expires', 'Status', 'Actions'].map((h) => (
-                                <th key={h} className="px-4 py-3 text-left text-xs font-medium text-ink-400 uppercase">{h}</th>
+                                <th key={h} className="px-4 py-3 text-left text-xs font-medium text-ink-500 uppercase">{h}</th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-ink-800">
+                    <tbody className="divide-y divide-ink-200">
                         {coupons.data.map((c) => (
-                            <tr key={c.id} className="hover:bg-ink-800/50">
+                            <tr key={c.id} className="hover:bg-ink-50">
                                 <td className="px-4 py-3 font-mono text-xs text-[#e7901d]">{c.code}</td>
-                                <td className="px-4 py-3 text-xs text-white">{formatDiscount(c)}</td>
-                                <td className="px-4 py-3 text-xs text-ink-300">{c.used_count} / {c.max_uses ?? '∞'}</td>
+                                <td className="px-4 py-3 text-xs text-ink-900">{formatDiscount(c)}</td>
+                                <td className="px-4 py-3 text-xs text-ink-500">{c.used_count} / {c.max_uses ?? '∞'}</td>
                                 <td className="px-4 py-3 text-xs text-ink-400">{c.expires_at ? new Date(c.expires_at).toLocaleDateString('en-PH') : '—'}</td>
                                 <td className="px-4 py-3 text-xs">
-                                    <span className={`font-medium ${c.is_valid ? 'text-green-400' : 'text-red-400'}`}>
+                                    <span className={`font-medium ${c.is_valid ? 'text-green-600' : 'text-red-600'}`}>
                                         {c.is_valid ? 'Valid' : 'Invalid'}
                                     </span>
                                 </td>
                                 <td className="px-4 py-3 flex gap-3 text-xs">
                                     <Link href={route('admin.coupons.edit', c.id)} className="text-[#e7901d] hover:underline">Edit</Link>
-                                    <button onClick={() => destroy(c.id, c.code)} className="text-red-400 hover:underline">Delete</button>
+                                    <button onClick={() => destroy(c.id, c.code)} className="text-red-500 hover:underline">Delete</button>
                                 </td>
                             </tr>
                         ))}
@@ -84,7 +84,7 @@ export default function AdminCouponsIndex({ coupons, filters }: Props) {
             <div className="mt-4 flex gap-1">
                 {coupons.links.map((l, i) => (
                     <button key={i} disabled={!l.url} onClick={() => l.url && router.get(l.url)}
-                        className={`rounded px-3 py-1.5 text-xs ${l.active ? 'bg-[#e7901d] text-white' : l.url ? 'bg-ink-800 text-ink-300 hover:bg-ink-700' : 'bg-ink-900 text-ink-600 cursor-not-allowed'}`}
+                        className={`rounded px-3 py-1.5 text-xs ${l.active ? 'bg-[#e7901d] text-white' : l.url ? 'bg-ink-100 text-ink-700 hover:bg-ink-200' : 'bg-canvas text-ink-400 cursor-not-allowed'}`}
                         dangerouslySetInnerHTML={{ __html: l.label }} />
                 ))}
             </div>

@@ -39,7 +39,7 @@ export default function AdminCategoryForm({ category, parents }: Props) {
     return (
         <AdminLayout title={isEditing ? `Edit ${category!.name}` : 'New Category'}>
             <Head title={isEditing ? `Edit ${category!.name}` : 'New Category — Admin'} />
-                <h1 className="mb-6 text-lg font-bold text-white">
+                <h1 className="mb-6 text-lg font-bold text-ink-900">
                     {isEditing ? `Edit "${category!.name}"` : 'New Category'}
                 </h1>
 

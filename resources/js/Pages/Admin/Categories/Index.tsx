@@ -27,7 +27,7 @@ export default function AdminCategoriesIndex({ categories }: Props) {
         <AdminLayout title="Categories">
             <Head title="Categories — Admin" />
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-white">Categories</h1>
+                    <h1 className="text-lg font-bold text-ink-900">Categories</h1>
                     <Button href={route('admin.categories.create')}>Add category</Button>
                 </div>
 

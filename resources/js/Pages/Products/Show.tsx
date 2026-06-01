@@ -336,8 +336,8 @@ export default function ProductShow({ product, relatedProducts }: Props) {
 
                     {/* Details */}
                     <div className="flex flex-col gap-6">
-                        {/* Category tags */}
-                        {product.categories.length > 0 && (
+                        {/* Category tags + wishlist */}
+                        <div className="flex items-center justify-between gap-2">
                             <div className="flex flex-wrap gap-1.5">
                                 {product.categories.map((cat) => (
                                     <Link key={cat.id} href={route('categories.show', cat.slug)}>
@@ -345,7 +345,8 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                     </Link>
                                 ))}
                             </div>
-                        )}
+                            <WishlistButton productId={product.id} variant="icon" />
+                        </div>
 
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-ink-950 lg:text-3xl">
@@ -443,8 +444,6 @@ export default function ProductShow({ product, relatedProducts }: Props) {
                                 size="lg"
                                 fullWidth={false}
                             />
-
-                            <WishlistButton productId={product.id} variant="icon" />
                         </div>
 
                         <p className="text-xs text-ink-400">

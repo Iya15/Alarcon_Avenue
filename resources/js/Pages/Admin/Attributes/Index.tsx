@@ -28,7 +28,7 @@ export default function AdminAttributesIndex({ attributes }: Props) {
         <AdminLayout title="Attributes">
             <Head title="Attributes — Admin" />
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-white">Attributes</h1>
+                    <h1 className="text-lg font-bold text-ink-900">Attributes</h1>
                     <Button onClick={() => setNewAttrOpen(true)}>Add attribute</Button>
                 </div>
 
