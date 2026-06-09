@@ -48,14 +48,15 @@ class AnalyticsController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'range'       => ['from' => $from, 'to' => $to, 'preset' => $request->input('preset', '30')],
             'summary'     => [
-                'total_orders'   => $totalOrders,
-                'gross_cents'    => $totalGross,
-                'net_cents'      => $sales->sum('net_cents'),
-                'refunds_cents'  => $totalRefunds,
-                'items_sold'     => $sales->sum('items_sold'),
-                'aov_cents'      => $aov,
-                'conversion_pct' => $conversion,
-                'new_customers'  => $newCustomers,
+                'total_orders'     => $totalOrders,
+                'completed_orders' => (int) $sales->sum('completed_count'),
+                'gross_cents'      => $totalGross,
+                'net_cents'        => $sales->sum('net_cents'),
+                'refunds_cents'    => $totalRefunds,
+                'items_sold'       => $sales->sum('items_sold'),
+                'aov_cents'        => $aov,
+                'conversion_pct'   => $conversion,
+                'new_customers'    => $newCustomers,
             ],
             'revenue_chart' => $sales->map(fn ($s) => [
                 'date'        => $s->date,

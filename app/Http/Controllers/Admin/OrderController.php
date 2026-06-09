@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Models\Order;
@@ -76,7 +77,10 @@ class OrderController extends Controller
             return back()->withErrors(['status' => 'Order is in a final state and cannot be transitioned.']);
         }
 
+        $oldStatus = $order->status;
         $order->update(['status' => $newStatus]);
+
+        OrderStatusUpdated::dispatch($order, $oldStatus, $newStatus);
 
         return back()->with('success', "Order status updated to {$newStatus->label()}.");
     }

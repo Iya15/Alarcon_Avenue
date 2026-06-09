@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 interface Summary {
     total_orders: number;
+    completed_orders: number;
     gross_cents: number;
     net_cents: number;
     refunds_cents: number;
@@ -103,12 +104,13 @@ export default function Dashboard({ range, summary, revenue_chart, orders_chart,
 
             {/* KPI grid */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatCard label="Gross Revenue"  value={formatPHP(summary.gross_cents)}  sub={`Net ${formatPHP(summary.net_cents)}`} />
-                <StatCard label="Orders"         value={summary.total_orders.toLocaleString()} sub={`${summary.items_sold} items sold`} />
-                <StatCard label="AOV"            value={formatPHP(summary.aov_cents)} />
-                <StatCard label="Conversion"     value={`${summary.conversion_pct}%`} sub="orders / sessions" />
-                <StatCard label="Refunds"        value={formatPHP(summary.refunds_cents)} />
-                <StatCard label="New Customers"  value={summary.new_customers.toLocaleString()} />
+                <StatCard label="Gross Revenue"      value={formatPHP(summary.gross_cents)}  sub={`Net ${formatPHP(summary.net_cents)}`} />
+                <StatCard label="Orders"             value={summary.total_orders.toLocaleString()} sub={`${summary.items_sold} items sold`} />
+                <StatCard label="Completed Orders"   value={summary.completed_orders.toLocaleString()} sub="Marked delivered" />
+                <StatCard label="AOV"                value={formatPHP(summary.aov_cents)} />
+                <StatCard label="Conversion"         value={`${summary.conversion_pct}%`} sub="orders / sessions" />
+                <StatCard label="Refunds"            value={formatPHP(summary.refunds_cents)} />
+                <StatCard label="New Customers"      value={summary.new_customers.toLocaleString()} />
             </div>
 
             {/* Charts row */}

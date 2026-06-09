@@ -2,14 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\OrderPaid;
-use App\Events\OrderPlaced;
-use App\Events\PaymentFailed;
-use App\Events\PaymentSucceeded;
-use App\Listeners\HandlePaymentFailed;
-use App\Listeners\HandlePaymentSucceeded;
-use App\Listeners\SendOrderConfirmationEmail;
-use App\Listeners\SendOrderPaidEmail;
 use App\Models\Brand;
 use App\Models\Coupon;
 use App\Observers\AdminAuditObserver;
@@ -29,7 +21,6 @@ use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ReviewPolicy;
 use App\Policies\UserPolicy;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -54,10 +45,8 @@ class AppServiceProvider extends ServiceProvider
             $model::observe(AdminAuditObserver::class);
         }
 
-        Event::listen(OrderPlaced::class,     SendOrderConfirmationEmail::class);
-        Event::listen(PaymentSucceeded::class, HandlePaymentSucceeded::class);
-        Event::listen(PaymentFailed::class,    HandlePaymentFailed::class);
-        Event::listen(OrderPaid::class,        SendOrderPaidEmail::class);
+        // Event listeners are auto-discovered from App\Listeners\ (Laravel 11+ default).
+        // No manual Event::listen() registrations needed here.
 
         Gate::policy(Brand::class, BrandPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
