@@ -1,4 +1,3 @@
-import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Card from '@/Components/ui/Card';
 import Input from '@/Components/ui/Input';
@@ -6,17 +5,18 @@ import AccountLayout from '@/Components/account/AccountLayout';
 import { useToast } from '@/stores/toastStore';
 import type { PageProps } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 interface User {
     name: string; email: string; phone: string | null;
     avatar_url: string | null; email_verified: boolean; is_social_auth: boolean;
 }
-interface Props extends PageProps { user: User; status?: string }
+interface Props extends PageProps { user: User }
 
-export default function AccountProfile({ user, status }: Props) {
+export default function AccountProfile({ user }: Props) {
     const toast = useToast();
     const avatarRef = useRef<HTMLInputElement>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const profileForm = useForm({
         name: user.name, email: user.email, phone: user.phone ?? '', avatar: null as File | null,
@@ -26,8 +26,33 @@ export default function AccountProfile({ user, status }: Props) {
         current_password: '', password: '', password_confirmation: '',
     });
 
-    if (status === 'profile-updated') toast.success('Profile saved.');
-    if (status === 'password-updated') toast.success('Password changed.');
+    function submitProfile(e: React.FormEvent) {
+        e.preventDefault();
+        profileForm.post(route('account.profile.update'), {
+            forceFormData: true,
+            onSuccess: () => {
+                // Revoke the local blob URL and let the server-returned avatar_url take over
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(null);
+                profileForm.setData('avatar', null);
+                toast.success('Profile saved.');
+            },
+            onError: () => toast.error('Could not save profile. Check the fields below.'),
+        });
+    }
+
+    function submitPassword(e: React.FormEvent) {
+        e.preventDefault();
+        passwordForm.post(route('account.password.update'), {
+            onSuccess: () => {
+                passwordForm.reset();
+                toast.success('Password changed.');
+            },
+            onError: () => toast.error('Could not change password.'),
+        });
+    }
+
+    const avatarSrc = previewUrl ?? user.avatar_url;
 
     return (
         <AccountLayout title="Profile">
@@ -39,9 +64,9 @@ export default function AccountProfile({ user, status }: Props) {
 
                 {/* Avatar */}
                 <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 overflow-hidden rounded-full bg-ink-100">
-                        {user.avatar_url
-                            ? <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
+                    <div className="h-16 w-16 overflow-hidden rounded-full bg-ink-100 shrink-0">
+                        {avatarSrc
+                            ? <img src={avatarSrc} alt={user.name} className="h-full w-full object-cover" />
                             : <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-ink-400">{user.name.charAt(0).toUpperCase()}</div>
                         }
                     </div>
@@ -49,16 +74,28 @@ export default function AccountProfile({ user, status }: Props) {
                         <Button variant="secondary" size="sm" onClick={() => avatarRef.current?.click()}>
                             Change photo
                         </Button>
-                        <input ref={avatarRef} type="file" accept="image/*" className="hidden"
-                            onChange={(e) => profileForm.setData('avatar', e.target.files?.[0] ?? null)} />
+                        <input
+                            ref={avatarRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+                                profileForm.setData('avatar', file);
+                                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                                setPreviewUrl(file ? URL.createObjectURL(file) : null);
+                            }}
+                        />
                         {profileForm.data.avatar && (
                             <p className="mt-1 text-xs text-ink-400">{profileForm.data.avatar.name}</p>
+                        )}
+                        {profileForm.errors.avatar && (
+                            <p className="mt-1 text-xs text-danger-500">{profileForm.errors.avatar}</p>
                         )}
                     </div>
                 </div>
 
-                <form onSubmit={(e) => { e.preventDefault(); profileForm.post(route('account.profile.update'), { forceFormData: true }); }}
-                    className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <form onSubmit={submitProfile} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Input label="Full name" value={profileForm.data.name}
                         onChange={(e) => profileForm.setData('name', e.target.value)}
                         error={profileForm.errors.name} required />
@@ -83,8 +120,7 @@ export default function AccountProfile({ user, status }: Props) {
             {!user.is_social_auth && (
                 <Card bordered className="space-y-4">
                     <h2 className="text-sm font-semibold text-ink-900">Change password</h2>
-                    <form onSubmit={(e) => { e.preventDefault(); passwordForm.post(route('account.password.update')); }}
-                        className="grid grid-cols-1 gap-4">
+                    <form onSubmit={submitPassword} className="grid grid-cols-1 gap-4">
                         <Input label="Current password" type="password"
                             value={passwordForm.data.current_password}
                             onChange={(e) => passwordForm.setData('current_password', e.target.value)}

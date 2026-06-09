@@ -114,21 +114,26 @@ export default function Home({ auth, featured, bestsellers, personalized, topCat
                     </div>
 
                     {heroCategories.length > 0 && (
-                        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                            {heroCategories.map(cat => (
-                                <Link
-                                    key={cat.id}
-                                    href={route('categories.show', cat.slug)}
-                                    className="group flex flex-col items-center gap-2 rounded-xl bg-white/5 p-4 text-center transition hover:bg-white/10"
-                                >
-                                    {cat.image_url ? (
-                                        <img src={cat.image_url} alt={cat.name} className="h-10 w-10 rounded-full object-cover" />
-                                    ) : (
-                                        <div className="h-10 w-10 rounded-full bg-white/10" />
-                                    )}
-                                    <span className="text-xs font-medium text-ink-200 group-hover:text-white">{cat.name}</span>
-                                </Link>
-                            ))}
+                        <div className="mt-10">
+                            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-ink-400">Categories</p>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                                {heroCategories.map(cat => (
+                                    <motion.div key={cat.id} whileHover={{ y: -3, boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }} transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}>
+                                        <Link
+                                            href={route('categories.show', cat.slug)}
+                                            className="group flex flex-col items-center gap-2 rounded-xl bg-white p-4 text-center transition-colors hover:bg-ink-50 active:scale-95"
+                                        >
+                                            {cat.image_url ? (
+                                                <img src={cat.image_url} alt={cat.name} className="h-10 w-10 object-cover" />
+                                            ) : (
+                                                <div className="h-10 w-10 bg-ink-200" />
+                                            )}
+                                            <span className="text-xs font-medium text-ink-900 group-hover:text-brand">{cat.name}</span>
+                                            <span className="text-[10px] text-ink-400 group-hover:text-brand transition-colors">Shop →</span>
+                                        </Link>
+                                    </motion.div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </Container>

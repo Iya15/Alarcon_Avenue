@@ -212,8 +212,11 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
 
                             <div className="hidden lg:block">
                                 {auth.user ? (
-                                    <Link href="/account" className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-xs font-bold text-white" title={auth.user.name}>
-                                        {auth.user.name.charAt(0).toUpperCase()}
+                                    <Link href="/account" className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-ink-900 text-xs font-bold text-white" title={auth.user.name}>
+                                        {auth.user.avatar_url
+                                            ? <img src={auth.user.avatar_url} alt={auth.user.name} className="h-full w-full object-cover" />
+                                            : auth.user.name.charAt(0).toUpperCase()
+                                        }
                                     </Link>
                                 ) : (
                                     <div className="flex items-center gap-2">

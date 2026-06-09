@@ -18,7 +18,7 @@ interface Inventory { available: number; in_stock: boolean; is_low_stock: boolea
 interface AttributeValue { id: number; attribute_id: number; value: string; display_value: string; meta: Record<string, string> | null }
 interface ProductImage { id: number; url: string; alt_text: string | null; is_primary: boolean; variant_id: number | null }
 interface Variant {
-    id: number; sku: string; is_active: boolean;
+    id: number; sku: string; name: string | null; is_active: boolean;
     effective_price: number; price_override_cents: number | null; compare_at_price_cents: number | null;
     attribute_values: AttributeValue[];
     inventory: Inventory | null;
@@ -136,7 +136,39 @@ function VariantSelector({
         });
     });
 
-    if (attributeGroups.size === 0) return null;
+    if (attributeGroups.size === 0) {
+        const namedVariants = variants.filter((v) => v.name);
+        if (namedVariants.length < 2) return null;
+
+        return (
+            <div>
+                <div className="mb-2 flex items-baseline gap-2">
+                    <span className="text-sm font-medium text-ink-900">Option</span>
+                    {selected?.name && <span className="text-sm text-ink-500">{selected.name}</span>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {namedVariants.map((v) => {
+                        const isSelected = selected?.id === v.id;
+                        const outOfStock = !(v.inventory?.in_stock ?? false);
+                        return (
+                            <button
+                                key={v.id}
+                                onClick={() => !outOfStock && onSelect(v)}
+                                disabled={outOfStock}
+                                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                                    isSelected
+                                        ? 'border-brand-500 bg-brand-50 text-brand-700 font-medium'
+                                        : 'border-ink-200 text-ink-700 hover:border-ink-400'
+                                } ${outOfStock ? 'opacity-30 cursor-not-allowed line-through' : ''}`}
+                            >
+                                {v.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4">

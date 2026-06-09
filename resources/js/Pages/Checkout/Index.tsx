@@ -7,7 +7,7 @@ import PageLayout from '@/Components/layout/PageLayout';
 import { useCartStore } from '@/stores/cartStore';
 import type { CartData } from '@/stores/cartStore';
 import type { PageProps } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
@@ -120,6 +120,44 @@ function OrderSummary({ cart }: { cart: CartData }) {
     const { totals, items } = cart;
     const activeItems = items.filter((i) => !i.saved_for_later);
 
+    const [couponInput, setCouponInput] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
+    const [appliedCode, setAppliedCode] = useState<string | null>(cart.coupon_code ?? null);
+
+    const applyCoupon = async () => {
+        if (!couponInput.trim()) return;
+        setCouponLoading(true);
+        setCouponError('');
+        try {
+            const res = await window.axios.post('/api/cart/coupon', { code: couponInput.trim() });
+            if (res.data) {
+                setAppliedCode(res.data.coupon?.code ?? couponInput.trim());
+                setCouponInput('');
+                router.reload({ only: ['cart'] });
+            }
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { errors?: { code?: string[] } } } };
+            const msg = axiosErr.response?.data?.errors?.code?.[0] ?? 'Invalid coupon code.';
+            setCouponError(msg);
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
+    const removeCoupon = async () => {
+        setCouponLoading(true);
+        try {
+            await window.axios.delete('/api/cart/coupon');
+            setAppliedCode(null);
+            router.reload({ only: ['cart'] });
+        } catch {
+            // ignore
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
     return (
         <div className="sticky top-24 rounded-2xl border border-ink-200 bg-surface p-5">
             <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-ink-400">Your Order</h2>
@@ -141,19 +179,66 @@ function OrderSummary({ cart }: { cart: CartData }) {
                 ))}
             </div>
 
+            {/* Coupon field */}
+            <div className="mt-4 border-t border-ink-100 pt-3">
+                {appliedCode ? (
+                    <div className="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2 text-sm">
+                        <span className="text-green-700 font-medium">🏷 {appliedCode} applied</span>
+                        <button
+                            type="button"
+                            onClick={removeCoupon}
+                            disabled={couponLoading}
+                            className="text-xs text-ink-400 hover:text-danger-600 disabled:opacity-50"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={couponInput}
+                                onChange={(e) => { setCouponInput(e.target.value); setCouponError(''); }}
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), applyCoupon())}
+                                placeholder="Coupon code"
+                                className="flex-1 rounded-lg border border-ink-200 bg-surface px-3 py-1.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                            />
+                            <button
+                                type="button"
+                                onClick={applyCoupon}
+                                disabled={couponLoading || !couponInput.trim()}
+                                className="flex items-center gap-1.5 rounded-lg border border-ink-200 px-3 py-1.5 text-sm font-medium text-ink-700 hover:bg-ink-50 disabled:opacity-50"
+                            >
+                                {couponLoading ? (
+                                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                                    </svg>
+                                ) : 'Apply'}
+                            </button>
+                        </div>
+                        {couponError && (
+                            <p className="mt-1 text-xs text-red-600">{couponError}</p>
+                        )}
+                    </div>
+                )}
+            </div>
+
             {/* Totals */}
-            <div className="mt-4 border-t border-ink-100 pt-3 space-y-1.5">
+            <div className="mt-3 border-t border-ink-100 pt-3 space-y-1.5">
                 <div className="flex justify-between text-sm text-ink-600"><span>Subtotal</span><span>{formatPrice(totals.subtotal_cents)}</span></div>
                 {totals.discount_cents > 0 && (
-                    <div className="flex justify-between text-sm text-green-600"><span>Discount</span><span>-{formatPrice(totals.discount_cents)}</span></div>
+                    <div className="flex justify-between text-sm" style={{ color: '#e7901d' }}>
+                        <span>Coupon discount</span><span>-{formatPrice(totals.discount_cents)}</span>
+                    </div>
                 )}
                 <div className="flex justify-between text-sm text-ink-600">
                     <span>Shipping</span>
-                    <span className={totals.shipping_cents === 0 ? 'text-green-600' : ''}>
-                        {totals.shipping_cents === 0 ? 'Free' : formatPrice(totals.shipping_cents)}
+                    <span className={totals.shipping_cents === 0 ? 'text-green-600 font-medium' : ''}>
+                        {totals.shipping_cents === 0 ? 'FREE' : formatPrice(totals.shipping_cents)}
                     </span>
                 </div>
-                <div className="flex justify-between text-xs text-ink-400"><span>VAT (12%, incl.)</span><span>{formatPrice(totals.tax_cents)}</span></div>
                 <div className="flex justify-between border-t border-ink-200 pt-2 text-base font-bold text-ink-950">
                     <span>Total</span><span>{formatPrice(totals.total_cents)}</span>
                 </div>
@@ -340,7 +425,7 @@ export default function CheckoutIndex({ cart, saved_addresses, default_address, 
                                                 <input type="radio" checked readOnly className="text-brand" />
                                                 <div className="flex-1">
                                                     <p className="text-sm font-semibold text-ink-900">Standard Delivery</p>
-                                                    <p className="text-xs text-ink-500">3–5 business days · Free over ₱1,500</p>
+                                                    <p className="text-xs text-ink-500">3–5 business days · Free over ₱999</p>
                                                 </div>
                                                 <span className="text-sm font-semibold text-ink-950">
                                                     {cart.totals.shipping_cents === 0 ? 'Free' : formatPrice(cart.totals.shipping_cents)}

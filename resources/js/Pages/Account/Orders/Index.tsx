@@ -3,9 +3,11 @@ import AccountLayout from '@/Components/account/AccountLayout';
 import type { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 
+interface OrderItem { product_name: string; quantity: number }
 interface Order {
     id: number; order_number: string; status: string; status_label: string;
     total_cents: number; created_at: string;
+    items: OrderItem[];
 }
 
 // Shape produced by LengthAwarePaginator->through()->toArray() — flat, no meta wrapper
@@ -122,9 +124,19 @@ export default function AccountOrdersIndex({ orders, counts, activeGroup }: Prop
                         >
                             <div className="flex items-center justify-between gap-4">
                                 <div className="min-w-0">
-                                    <p className="font-mono text-sm font-semibold text-ink-900">{order.order_number}</p>
+                                    {/* Product names */}
+                                    <p className="truncate text-sm font-medium text-ink-900">
+                                        {order.items.slice(0, 2).map((i) => i.product_name).join(', ')}
+                                        {order.items.length > 2 && (
+                                            <span className="text-ink-400"> +{order.items.length - 2} more</span>
+                                        )}
+                                    </p>
+                                    <p className="mt-0.5 font-mono text-xs text-ink-500">{order.order_number}</p>
                                     <p className="text-xs text-ink-400">
-                                        {new Date(order.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })}
+                                        {new Date(order.created_at).toLocaleString('en-PH', {
+                                            month: 'short', day: 'numeric', year: 'numeric',
+                                            hour: 'numeric', minute: '2-digit', hour12: true,
+                                        })}
                                     </p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-3">
