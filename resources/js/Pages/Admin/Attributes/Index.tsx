@@ -21,7 +21,10 @@ export default function AdminAttributesIndex({ attributes }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('admin.attributes.store'), { onSuccess: () => { reset(); setNewAttrOpen(false); } });
+        post(route('admin.attributes.store'), {
+            onSuccess: () => { reset(); setNewAttrOpen(false); },
+            onError:   () => {},
+        });
     };
 
     return (
@@ -85,12 +88,15 @@ export default function AdminAttributesIndex({ attributes }: Props) {
 
 function AddValueInline({ attributeId }: { attributeId: number }) {
     const [open, setOpen] = useState(false);
-    const { data, setData, post, processing, reset } = useForm({ value: '', display_value: '', meta: '' });
+    const { data, setData, post, processing, reset } = useForm<{
+        value: string; display_value: string; meta: Record<string, string> | null;
+    }>({ value: '', display_value: '', meta: null });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post(route('admin.attribute-values.store', attributeId), {
             onSuccess: () => { reset(); setOpen(false); },
+            onError:   () => {},
         });
     };
 
@@ -106,7 +112,7 @@ function AddValueInline({ attributeId }: { attributeId: number }) {
         <form onSubmit={submit} className="flex items-center gap-1.5 rounded-md border border-brand-300 bg-brand-50 px-2 py-1">
             <input autoFocus placeholder="value" value={data.value} onChange={(e) => setData('value', e.target.value)} className="w-20 bg-transparent text-xs text-ink-900 focus:outline-none" />
             <input placeholder="label" value={data.display_value} onChange={(e) => setData('display_value', e.target.value)} className="w-20 bg-transparent text-xs text-ink-900 focus:outline-none" />
-            <input placeholder="#hex" value={data.meta} onChange={(e) => setData('meta', e.target.value)} className="w-14 bg-transparent text-xs text-ink-900 focus:outline-none" />
+            <input placeholder="#hex" value={data.meta?.hex ?? ''} onChange={(e) => setData('meta', e.target.value ? { hex: e.target.value } : null)} className="w-14 bg-transparent text-xs text-ink-900 focus:outline-none" />
             <button type="submit" disabled={processing} className="text-xs text-brand-600">✓</button>
             <button type="button" onClick={() => setOpen(false)} className="text-xs text-ink-400">✕</button>
         </form>

@@ -5,6 +5,7 @@ export interface User {
     email_verified_at?: string;
     phone?: string;
     avatar_path?: string;
+    avatar_url?: string | null;
     is_active: boolean;
     social_provider?: string;
 }
