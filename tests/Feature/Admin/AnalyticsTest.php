@@ -133,12 +133,14 @@ test('creating a product as admin writes a created audit log entry', function ()
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
+    $category = \App\Models\Category::factory()->create();
+
     $this->actingAs($admin)->post(route('admin.products.store'), [
         'name'             => 'Audit Test Product',
         'slug'             => 'audit-test-product-' . rand(1000, 9999),
         'base_price_cents' => 10000,
         'status'           => 'active',
-        'category_ids'     => [],
+        'category_ids'     => [$category->id],
     ]);
 
     expect(AuditLog::where('user_id', $admin->id)->where('event', 'created')->exists())->toBeTrue();

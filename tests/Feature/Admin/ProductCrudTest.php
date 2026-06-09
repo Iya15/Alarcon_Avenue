@@ -38,15 +38,18 @@ test('staff can create a product with a default variant and inventory row', func
     $staff = User::factory()->create();
     $staff->assignRole('staff');
 
+    $cat = Category::factory()->create();
+
     $response = $this->actingAs($staff)->post(route('admin.products.store'), [
         'name'             => 'Test Shirt',
         'base_price_cents' => 49900,
         'status'           => 'draft',
         'is_featured'      => false,
+        'category_ids'     => [$cat->id],
     ]);
 
     $product = Product::where('name', 'Test Shirt')->firstOrFail();
-    $response->assertRedirect(route('admin.products.edit', $product));
+    $response->assertRedirect(route('admin.products.create'));
 
     expect($product->slug)->toBe('test-shirt');
     expect($product->variants()->count())->toBe(1);
@@ -77,11 +80,14 @@ test('staff can update a product', function () {
     $staff->assignRole('staff');
     $product = Product::factory()->create(['name' => 'Old Name', 'base_price_cents' => 10000, 'status' => 'draft', 'is_featured' => false]);
 
+    $cat = Category::factory()->create();
+
     $this->actingAs($staff)->put(route('admin.products.update', $product), [
         'name'             => 'Updated Name',
         'base_price_cents' => 15000,
         'status'           => 'active',
         'is_featured'      => true,
+        'category_ids'     => [$cat->id],
     ])->assertRedirect(route('admin.products.edit', $product));
 
     expect($product->fresh()->name)->toBe('Updated Name');

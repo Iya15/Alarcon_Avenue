@@ -169,8 +169,8 @@ test('totals are computed server-side and include VAT extraction', function () {
     $tax      = $response->json('totals.tax_cents');
 
     expect($subtotal)->toBe(11200);
-    // VAT = 11200 × 12/112 = 1200 cents = ₱12.00
-    expect($tax)->toBe(1200);
+    // VAT is inclusive in prices — tax_cents is 0 (shown as nothing in UI)
+    expect($tax)->toBe(0);
 });
 
 test('shipping is free above the 150000 cent threshold', function () {

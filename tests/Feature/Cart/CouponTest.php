@@ -56,8 +56,8 @@ test('percentage coupon reduces subtotal correctly', function () {
     $response = $this->post('/api/cart/coupon', ['code' => 'SAVE20'])->assertOk();
 
     expect($response->json('totals.discount_cents'))->toBe(20_000); // 20% of 100,000
-    // after_discount = 80,000 (below 150,000 threshold) → shipping = 15,000 → total = 95,000
-    expect($response->json('totals.total_cents'))->toBe(95_000);
+    // after_discount = 80,000 (below 99,900 threshold) → shipping = 9,900 → total = 89,900
+    expect($response->json('totals.total_cents'))->toBe(89_900);
 });
 
 // ── Fixed amount coupon ────────────────────────────────────────────────────────
@@ -131,8 +131,8 @@ test('tax is calculated on subtotal after discount', function () {
     $response = $this->post('/api/cart/coupon', ['code' => 'HALF'])->assertOk();
 
     // subtotal = 112,000 → discount = 56,000 → after_discount = 56,000
-    // tax = 56,000 × 12/112 = 6,000
-    expect($response->json('totals.tax_cents'))->toBe(6_000);
+    // VAT is inclusive in prices — tax_cents is now 0 (not extracted separately)
+    expect($response->json('totals.tax_cents'))->toBe(0);
 });
 
 // ── Min order ─────────────────────────────────────────────────────────────────

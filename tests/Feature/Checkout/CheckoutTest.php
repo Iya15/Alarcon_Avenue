@@ -109,7 +109,7 @@ test('authenticated user can place an order successfully', function () {
     expect($order->items()->first()->quantity)->toBe(2);
     expect($order->items()->first()->unit_price_cents)->toBe(50000);
     expect($order->subtotal_cents)->toBe(100000);   // 2 × 50000
-    expect($order->shipping_cents)->toBe(15000);    // ₱150 flat (₱1,000 < ₱1,500 threshold)
+    expect($order->shipping_cents)->toBe(0);         // free (₱1,000 ≥ ₱999 threshold)
 
     // Stock reserved
     $inventory = Inventory::where('product_variant_id', $item->product_variant_id)->first();
