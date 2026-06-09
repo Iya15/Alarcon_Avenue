@@ -33,7 +33,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user'  => $user,
+                'user'  => $user ? array_merge(
+                    $user->only(['id', 'name', 'email', 'email_verified_at', 'phone', 'avatar_path', 'is_active', 'social_provider']),
+                    ['avatar_url' => $user->avatar_path ? Storage::disk('media')->url($user->avatar_path) : null]
+                ) : null,
                 'roles' => $user?->getRoleNames() ?? [],
             ],
             'flash' => [

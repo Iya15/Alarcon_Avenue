@@ -51,7 +51,7 @@ class CategoryController extends Controller
     public function edit(Category $category): Response
     {
         return Inertia::render('Admin/Categories/CreateEdit', [
-            'category' => new CategoryResource($category),
+            'category' => (new CategoryResource($category))->resolve(),
             'parents'  => CategoryResource::collection(
                 Category::whereNull('parent_id')
                     ->where('id', '!=', $category->id)

@@ -21,7 +21,7 @@ class UpdateCategoryAction
             if ($category->image_path) {
                 Storage::disk('media')->delete($category->image_path);
             }
-            $data['image_path'] = $image->store('categories', 'media');
+            $data['image_path'] = $image->store("categories/{$category->id}", 'media');
         }
 
         $category->update($data);

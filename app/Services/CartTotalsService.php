@@ -6,11 +6,11 @@ use App\Models\Cart;
 
 class CartTotalsService
 {
-    // Free shipping threshold: ₱1,500 = 150,000 cents
-    private const FREE_SHIPPING_THRESHOLD_CENTS = 150_000;
+    // Free shipping threshold: ₱999 = 99,900 cents
+    private const FREE_SHIPPING_THRESHOLD_CENTS = 99_900;
 
-    // Flat shipping fee: ₱150 = 15,000 cents
-    private const SHIPPING_RATE_CENTS = 15_000;
+    // Flat shipping fee: ₱99 = 9,900 cents
+    private const SHIPPING_RATE_CENTS = 9_900;
 
     public function compute(Cart $cart): array
     {
@@ -29,9 +29,8 @@ class CartTotalsService
             ? 0
             : self::SHIPPING_RATE_CENTS;
 
-        // VAT-inclusive extraction: prices already include 12% VAT
-        // VAT component = amount × 12/112
-        $taxCents = (int) round($subtotalAfterDiscount * 12 / 112);
+        // VAT is inclusive in product prices — show nothing rather than incorrect extracted tax
+        $taxCents = 0;
 
         // Total = subtotal_after_discount + shipping (tax already inside subtotal)
         $totalCents = $subtotalAfterDiscount + $shippingCents;

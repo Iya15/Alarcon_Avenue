@@ -15,11 +15,14 @@ class CreateCategoryAction
             ? Str::slug($data['slug'])
             : $this->uniqueSlug(Str::slug($data['name']));
 
+        $category = Category::create($data);
+
         if ($image) {
-            $data['image_path'] = $image->store('categories', 'media');
+            $path = $image->store("categories/{$category->id}", 'media');
+            $category->update(['image_path' => $path]);
         }
 
-        return Category::create($data);
+        return $category->fresh();
     }
 
     private function uniqueSlug(string $base): string
