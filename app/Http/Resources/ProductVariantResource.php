@@ -11,6 +11,7 @@ class ProductVariantResource extends JsonResource
     {
         return [
             'id'                     => $this->id,
+            'name'                   => $this->name,
             'sku'                    => $this->sku,
             'is_active'              => $this->is_active,
             'price_override_cents'   => $this->price_override_cents,

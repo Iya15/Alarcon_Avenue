@@ -28,8 +28,19 @@ class UpdateProductRequest extends FormRequest
             'is_featured'            => ['boolean'],
             'meta_title'             => ['nullable', 'string', 'max:255'],
             'meta_description'       => ['nullable', 'string', 'max:500'],
-            'category_ids'           => ['nullable', 'array'],
+            'category_ids'           => ['required', 'array', 'min:1'],
             'category_ids.*'         => ['integer', 'exists:categories,id'],
+            'variants'               => ['nullable', 'array'],
+            'variants.*.id'          => ['nullable', 'integer', 'exists:product_variants,id'],
+            'variants.*.name'        => ['required_with:variants.*', 'string', 'max:255'],
+            'variants.*.sku'         => ['nullable', 'string', 'max:100'],
+            'variants.*.price_adjustment' => ['nullable', 'integer'],
+            'variants.*.stock_quantity'   => ['required_with:variants.*', 'integer', 'min:0'],
+            'deleted_variant_ids'    => ['nullable', 'array'],
+            'deleted_variant_ids.*'  => ['integer'],
+            'attributes'             => ['nullable', 'array'],
+            'attributes.*.key'       => ['required_with:attributes.*', 'string', 'max:100'],
+            'attributes.*.value'     => ['required_with:attributes.*', 'string', 'max:255'],
         ];
     }
 }

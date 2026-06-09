@@ -18,13 +18,15 @@ class ProductCardResource extends JsonResource
             fn ($v) => $v->relationLoaded('inventory') && $v->inventory?->available > 0
         );
 
-        $lowestPrice = $variants->min('effective_price') ?? $this->base_price_cents;
+        $base        = $this->base_price_cents;
+        $lowestPrice = $variants->min(fn ($v) => $v->price_override_cents ?? $base) ?? $base;
 
         return [
             'id'                     => $this->id,
             'name'                   => $this->name,
             'slug'                   => $this->slug,
             'base_price_cents'       => $this->base_price_cents,
+            'price_display'          => '₱' . number_format($this->base_price_cents / 100, 2),
             'compare_at_price_cents' => $this->compare_at_price_cents,
             'lowest_price_cents'     => $lowestPrice,
             'status'                 => $this->status,

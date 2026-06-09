@@ -38,6 +38,9 @@ class ProductResource extends JsonResource
             'primary_image' => $this->whenLoaded('primaryImage', fn () =>
                 $this->primaryImage ? (new ProductImageResource($this->primaryImage))->resolve() : null
             ),
+            'attributes' => $this->whenLoaded('productAttributes', fn () =>
+                $this->productAttributes->map(fn ($a) => ['key' => $a->key, 'value' => $a->value])->values()->all()
+            ),
         ];
     }
 }

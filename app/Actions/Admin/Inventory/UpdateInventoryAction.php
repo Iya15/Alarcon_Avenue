@@ -20,8 +20,13 @@ class UpdateInventoryAction
 
         $fresh = $inventory->fresh()->load('variant');
 
-        // Broadcast updated stock so open product pages refresh live
-        event(new StockUpdated($fresh));
+        // Broadcast updated stock so open product pages refresh live.
+        // Silently skip if Reverb is not running.
+        try {
+            event(new StockUpdated($fresh));
+        } catch (\Illuminate\Broadcasting\BroadcastException) {
+            // Reverb not running — inventory is still saved, live push just won't fire.
+        }
 
         return $fresh;
     }

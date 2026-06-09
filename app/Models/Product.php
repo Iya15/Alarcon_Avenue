@@ -84,6 +84,11 @@ class Product extends Model
         return $this->hasMany(Review::class)->where('status', Review::STATUS_PUBLISHED);
     }
 
+    public function productAttributes(): HasMany
+    {
+        return $this->hasMany(ProductAttribute::class)->orderBy('id');
+    }
+
     public function recommendations(): HasMany
     {
         return $this->hasMany(\App\Models\ProductRecommendation::class)

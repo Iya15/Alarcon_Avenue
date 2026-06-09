@@ -57,22 +57,21 @@ class ProductController extends Controller
         CreateProductAction      $action,
         UploadProductImageAction $uploadAction,
     ): RedirectResponse {
-        $product = $action->execute($request->validated());
+        $validated = array_merge($request->validated(), [
+            'is_featured' => $request->boolean('is_featured'),
+        ]);
+        $product = $action->execute($validated);
 
         if ($request->hasFile('images')) {
             $uploadAction->execute($product, $request->file('images'));
         }
 
-        $message = $request->hasFile('images')
-            ? 'Product created with images. Add variants below.'
-            : 'Product created. Add images and variants below.';
-
-        return redirect()->route('admin.products.edit', $product)->with('success', $message);
+        return redirect()->route('admin.products.create');
     }
 
     public function edit(Product $product): Response
     {
-        $product->load(['categories', 'images', 'variants.attributeValues', 'variants.inventory']);
+        $product->load(['categories', 'images', 'variants.attributeValues', 'variants.inventory', 'productAttributes']);
 
         return Inertia::render('Admin/Products/CreateEdit', [
             'product'    => (new ProductResource($product))->resolve(),
@@ -83,10 +82,11 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product, UpdateProductAction $action): RedirectResponse
     {
-        $action->execute($product, $request->validated());
+        $action->execute($product, array_merge($request->validated(), [
+            'is_featured' => $request->boolean('is_featured'),
+        ]));
 
-        return redirect()->route('admin.products.edit', $product)
-            ->with('success', 'Product updated.');
+        return redirect()->route('admin.products.edit', $product);
     }
 
     public function destroy(Product $product): RedirectResponse

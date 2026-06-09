@@ -20,6 +20,7 @@ class ProductDetailResource extends JsonResource
                 : null,
             'short_description'      => $this->short_description,
             'base_price_cents'       => $this->base_price_cents,
+            'price_display'          => '₱' . number_format($this->base_price_cents / 100, 2),
             'compare_at_price_cents' => $this->compare_at_price_cents,
             'status'                 => $this->status,
             'is_featured'            => $this->is_featured,
@@ -35,7 +36,10 @@ class ProductDetailResource extends JsonResource
                 $this->images->map(fn ($i) => (new ProductImageResource($i))->resolve())->values()->all()
             ),
             'variants' => $this->whenLoaded('variants', fn () =>
-                $this->variants->map(fn ($v) => (new ProductVariantResource($v))->resolve())->values()->all()
+                $this->variants
+                    ->each(fn ($v) => $v->setRelation('product', $this->resource))
+                    ->map(fn ($v) => (new ProductVariantResource($v))->resolve())
+                    ->values()->all()
             ),
 
             'rating_average' => $this->rating_average,
